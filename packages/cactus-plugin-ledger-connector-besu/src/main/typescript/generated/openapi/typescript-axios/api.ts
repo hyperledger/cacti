@@ -135,6 +135,73 @@ export interface ConsistencyStrategy {
 /**
  * 
  * @export
+ * @interface DeployContractSolidityBytecodeNoKeychainV1Request
+ */
+export interface DeployContractSolidityBytecodeNoKeychainV1Request {
+    /**
+     * The contract name for retrieve the contracts json on the keychain.
+     * @type {string}
+     * @memberof DeployContractSolidityBytecodeNoKeychainV1Request
+     */
+    'contractName': string;
+    /**
+     * The application binary interface of the solidity contract
+     * @type {Array<any>}
+     * @memberof DeployContractSolidityBytecodeNoKeychainV1Request
+     */
+    'contractAbi': Array<any>;
+    /**
+     * For use when not using keychain, pass the contract in as this string variable
+     * @type {string}
+     * @memberof DeployContractSolidityBytecodeNoKeychainV1Request
+     */
+    'contractJSONString'?: string;
+    /**
+     * 
+     * @type {Array<any>}
+     * @memberof DeployContractSolidityBytecodeNoKeychainV1Request
+     */
+    'constructorArgs': Array<any>;
+    /**
+     * 
+     * @type {Web3SigningCredential}
+     * @memberof DeployContractSolidityBytecodeNoKeychainV1Request
+     */
+    'web3SigningCredential': Web3SigningCredential;
+    /**
+     * See https://ethereum.stackexchange.com/a/47556 regarding the maximum length of the bytecode
+     * @type {string}
+     * @memberof DeployContractSolidityBytecodeNoKeychainV1Request
+     */
+    'bytecode': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof DeployContractSolidityBytecodeNoKeychainV1Request
+     */
+    'gas'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeployContractSolidityBytecodeNoKeychainV1Request
+     */
+    'gasPrice'?: string;
+    /**
+     * The amount of milliseconds to wait for a transaction receipt with theaddress of the contract(which indicates successful deployment) beforegiving up and crashing.
+     * @type {number}
+     * @memberof DeployContractSolidityBytecodeNoKeychainV1Request
+     */
+    'timeoutMs'?: number;
+    /**
+     * 
+     * @type {BesuPrivateTransactionConfig}
+     * @memberof DeployContractSolidityBytecodeNoKeychainV1Request
+     */
+    'privateTransactionConfig'?: BesuPrivateTransactionConfig;
+}
+/**
+ * 
+ * @export
  * @interface DeployContractSolidityBytecodeV1Request
  */
 export interface DeployContractSolidityBytecodeV1Request {
