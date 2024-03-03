@@ -7628,6 +7628,7 @@ __metadata:
     "@types/express": 4.17.19
     "@types/express-http-proxy": 1.6.2
     "@types/google-protobuf": 3.15.5
+    "@types/http-cache-semantics": 4.0.4
     "@types/json-stable-stringify": 1.0.34
     "@types/jsonwebtoken": 8.5.4
     "@types/multer": 1.4.7
@@ -7657,6 +7658,7 @@ __metadata:
     google-protobuf: 3.18.0-rc.2
     grpc-tools: 1.12.4
     grpc_tools_node_protoc_ts: 5.3.3
+    http-cache-semantics: 4.1.1
     http-status-codes: 2.1.4
     jose: 4.9.2
     json-stable-stringify: 1.0.2
@@ -14935,6 +14937,13 @@ __metadata:
   version: 4.0.3
   resolution: "@types/http-cache-semantics@npm:4.0.3"
   checksum: 8a672e545fd01ba3a9f16000639ac687bdbbc6bc37e534fbcf55ac9036a168c96f953c79e063d67e937d9fc0be41734d8af378f75bf1ecb7a24e499001486053
+  languageName: node
+  linkType: hard
+
+"@types/http-cache-semantics@npm:4.0.4":
+  version: 4.0.4
+  resolution: "@types/http-cache-semantics@npm:4.0.4"
+  checksum: 7f4dd832e618bc1e271be49717d7b4066d77c2d4eed5b81198eb987e532bb3e1c7e02f45d77918185bad936f884b700c10cebe06305f50400f382ab75055f9e8
   languageName: node
   linkType: hard
 
