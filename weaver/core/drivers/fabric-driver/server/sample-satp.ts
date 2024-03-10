@@ -55,7 +55,7 @@ async function performLockHelper(
     }
 
     // Timeout
-    var timeout = 0, timeout2 = 0;
+    let timeout = 0, timeout2 = 0;
     const currTime = Math.floor(Date.now() / 1000);
     if (performLockRequest2['timeout-epoch']) {
         let duration = performLockRequest2['timeout-epoch'] - currTime
@@ -75,7 +75,7 @@ async function performLockHelper(
     const lockerCert = Buffer.from(lockerWalletPath).toString('base64')
     const recipientCert = Buffer.from(recipientWalletPath).toString('base64')
 
-    var funcToCall, asset
+    let funcToCall, asset
 
     if (performLockRequest2['fungible']) {
         funcToCall = SatpAssetManager.createFungibleHTLC
@@ -263,8 +263,8 @@ async function assignAssetHelper(
 
     params = assignAssetRequest2['param'].split(':')
 
-    var funcToCall = SatpAssetManager.assignAsset
-    var asset = assignAssetRequest2['param']
+    let funcToCall = SatpAssetManager.assignAsset
+    let asset = assignAssetRequest2['param']
 
     if (assignAssetRequest2['fungible']) {
         // funcToCall = SatpAssetManager.claimFungibleAssetInHTLC
