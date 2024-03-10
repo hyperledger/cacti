@@ -5,7 +5,8 @@ import logger from './logger';
 import { credentials } from '@grpc/grpc-js';
 import { SatpAssetManager, HashFunctions } from '@hyperledger/cacti-weaver-sdk-fabric'
 import fs from 'fs';
-import { Gateway, Network } from 'fabric-network'
+import path from 'path';
+import { Gateway, Network, Wallets, Contract, X509Identity } from 'fabric-network'
 import { getNetworkGateway } from "./fabric-code";
 import { getDriverKeyCert } from './walletSetup';
 
@@ -30,6 +31,7 @@ async function performLockHelper(
     // Locker and recipient
     const locker = performLockRequest2['locker'];
     const recipient = performLockRequest2['recipient'];
+    const lockerWalletPath = performLockRequest2['lockerWalletPath'];
     const recipientWalletPath = performLockRequest2['recipientWalletPath'];
     let hashFn = performLockRequest2['hash_fn'];
     let hashBase64 = performLockRequest2['hashBase64'];
@@ -53,9 +55,7 @@ async function performLockHelper(
     }
 
     // Timeout
-    let timeout = 0;
-    let timeout2 = 0;
-
+    var timeout = 0, timeout2 = 0;
     const currTime = Math.floor(Date.now() / 1000);
     if (performLockRequest2['timeout-epoch']) {
         let duration = performLockRequest2['timeout-epoch'] - currTime
@@ -72,9 +72,10 @@ async function performLockHelper(
     const contract = network.getContract(chaincodeId);
 
     const params = performLockRequest2['param'].split(':')
+    const lockerCert = Buffer.from(lockerWalletPath).toString('base64')
     const recipientCert = Buffer.from(recipientWalletPath).toString('base64')
 
-    let funcToCall, asset
+    var funcToCall, asset
 
     if (performLockRequest2['fungible']) {
         funcToCall = SatpAssetManager.createFungibleHTLC
@@ -84,9 +85,9 @@ async function performLockHelper(
         asset = 'Asset'
     }
 
-    console.info(`Asset Lock: Lock ${asset}:\n`);
+    logger.info(`Asset Lock: Lock ${asset}:\n`);
     try {
-        console.info(`Trying ${asset} Lock: ${params[0]}, ${params[1]} by ${locker} for ${recipient}`)
+        logger.info(`Trying ${asset} Lock: ${params[0]}, ${params[1]} by ${locker} for ${recipient}`)
         const res = await funcToCall(contract,
             params[0],
             params[1],
@@ -97,15 +98,17 @@ async function performLockHelper(
         if (!res.result) {
             throw new Error()
         }
-        console.info(`${asset} Locked with Contract Id: ${res.result}, preimage: ${res.hash.getPreimage()}, hashvalue: ${res.hash.getSerializedHashBase64()}`)
-        console.info('Asset has been locked successfully')
+        logger.info(`${asset} Locked with Contract Id: ${res.result}, preimage: ${res.hash.getPreimage()}, hashvalue: ${res.hash.getSerializedHashBase64()}`)
+        logger.info('Asset has been locked successfully')
 
     } catch (error) {
         console.error(`Could not Lock ${asset} in ${targetNetwork}`)
+    } finally {
+        if (gateway) {
+            await gateway.disconnect();
+            logger.info('Gateway disconnected.');
+        }
     }
-
-    await gateway.disconnect()
-    logger.info('Gateways disconnected.')
 
     const client = getRelayClientForAssetStatusResponse();
     const request = new satp_pb.SendAssetStatusRequest();
@@ -117,7 +120,7 @@ async function performLockHelper(
 async function createAssetHelper(
     createAssetRequest: driverPb.CreateAssetRequest,
     networkName: string
-): Promise<any> {
+): Promise<void> {
 
     // TODO: remove the hardcoded values 
     let createAssetRequest2 = {};
@@ -134,6 +137,7 @@ async function createAssetHelper(
     createAssetRequest2['channel'] = 'mychannel';
     createAssetRequest2['chaincode-id'] = 'satpsimpleasset';
 
+    const targetNetwork = createAssetRequest2['target-network'];
     const owner = createAssetRequest2['owner'];
     const ccType = createAssetRequest2['type'];
     const assetType = createAssetRequest2['assetType'];
@@ -168,25 +172,27 @@ async function createAssetHelper(
     } else {
         throw new Error(`Unrecognized asset category: ${ccType}`)
     }
-    console.log(currentQuery)
+    logger.info(currentQuery)
 
     try {
-        console.info(`Trying creating the asset: type: ${ccType}, id: ${id}, by: ${owner}, facevalue: ${facevalue}, maturitydate: ${maturitydate}`)
+        logger.info(`Trying creating the asset: type: ${ccType}, id: ${id}, by: ${owner}, facevalue: ${facevalue}, maturitydate: ${maturitydate}`)
         const read = await contract.submitTransaction(currentQuery.ccFunc, ...currentQuery.args)
         const state = Buffer.from(read).toString()
         if (state) {
             logger.debug(`Response From Network: ${state}`)
-            console.info('Asset has been created successfully')
+            logger.info('Asset has been created successfully')
         } else {
             logger.debug('No Response from network')
         }
     } catch (error) {
         console.error(`Failed to submit transaction: ${error}`)
         throw new Error(error)
+    } finally {
+        if (gateway) {
+            await gateway.disconnect();
+            logger.info('Gateway disconnected.');
+        }
     }
-
-    await gateway.disconnect()
-    logger.info('Gateways disconnected.')
 
     const client = getRelayClientForAssetStatusResponse();
     const request = new satp_pb.SendAssetStatusRequest();
@@ -196,9 +202,11 @@ async function createAssetHelper(
 }
 
 async function extinguishHelper(
-    extinguishRequest: driverPb.ExtinguishRequest): Promise<void> {
+    extinguishRequest: driverPb.ExtinguishRequest,
+    networkName: string
+): Promise<void> {
 
-    // TODO
+    // TODO: run the appropriate extinguish logic
     const client = getRelayClientForAssetStatusResponse();
     const request = new satp_pb.SendAssetStatusRequest();
     request.setSessionId(extinguishRequest.getSessionId());
@@ -241,7 +249,7 @@ async function assignAssetHelper(
 
     // Hash
     let hash: HashFunctions.Hash
-    if (hashFn == 'SHA512') {
+    if (hashFn === 'SHA512') {
         hash = new HashFunctions.SHA512()
     } else {
         hash = new HashFunctions.SHA256()
@@ -255,8 +263,8 @@ async function assignAssetHelper(
 
     params = assignAssetRequest2['param'].split(':')
 
-    const funcToCall = SatpAssetManager.assignAsset
-    let asset = assignAssetRequest2['param']
+    var funcToCall = SatpAssetManager.assignAsset
+    var asset = assignAssetRequest2['param']
 
     if (assignAssetRequest2['fungible']) {
         // funcToCall = SatpAssetManager.claimFungibleAssetInHTLC
@@ -265,36 +273,43 @@ async function assignAssetHelper(
 
     if (fungible) {
         try {
-            console.info(`Trying assigning the asset with contract id ${contractId}`)
+            logger.info(`Trying assigning the asset with contract id ${contractId}`)
 
             // TODO
         } catch (error) {
             console.error(`Could not assign ${asset} in ${targetNetwork}`)
             throw new Error(`Could not assign ${asset} in ${targetNetwork}`)
+        } finally {
+            if (gateway) {
+                await gateway.disconnect();
+                logger.info('Gateway disconnected.');
+            }
         }
     } else {
         try {
             const driverkeyCert = await getDriverKeyCert();
             const certificate = Buffer.from(driverkeyCert.cert).toString('base64')
 
-            console.info(`Trying assign asset with params: ${params[0]}, ${params[1]} locked by ${locker} for ${recipient}`)
+            logger.info(`Trying assign asset with params: ${params[0]}, ${params[1]} locked by ${locker} for ${recipient}`)
             const res = await funcToCall(contract,
                 params[0],
                 params[1],
                 certificate,
                 hash)
             if (!res) {
-                throw new Error("assignAssetHelper() funcToCall res falsy.");
+                throw new Error()
             }
-            console.info(`${asset} assigned complete: ${res}`)
-            console.info(`Asset ${asset} assign complete: ${res}`)
+            logger.info(`${asset} assigned complete: ${res}`)
+            logger.info(`Asset ${asset} assign complete: ${res}`)
         } catch (error) {
             console.error(`Could not assign non-fungible ${asset} in ${targetNetwork}: ${error}`)
             throw new Error(`Could not assign non-fungible ${asset} in ${targetNetwork}: ${error}`)
+        } finally {
+            if (gateway) {
+                await gateway.disconnect();
+                logger.info('Gateway disconnected.');
+            }
         }
-
-        await gateway.disconnect()
-        logger.info('Gateways disconnected.')
 
         const client = getRelayClientForAssetStatusResponse();
         const request = new satp_pb.SendAssetStatusRequest();
@@ -304,7 +319,7 @@ async function assignAssetHelper(
     }
 }
 
-function getRelayClientForAssetStatusResponse(): satp_grpc_pb.SATPClient {
+function getRelayClientForAssetStatusResponse() {
     let client: satp_grpc_pb.SATPClient;
     if (process.env.RELAY_TLS === 'true') {
         if (!process.env.RELAY_TLSCA_CERT_PATH || process.env.RELAY_TLSCA_CERT_PATH == "") {
@@ -332,7 +347,7 @@ function getRelayClientForAssetStatusResponse(): satp_grpc_pb.SATPClient {
 }
 
 // handle callback
-function relayCallback(err: unknown, response: any) {
+function relayCallback(err: any, response: any) {
     if (response) {
         logger.info(`Relay Callback Response: ${JSON.stringify(response.toObject())}`);
     } else if (err) {

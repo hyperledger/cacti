@@ -583,7 +583,7 @@ const isAssetLockedInHTLC = async (
     assetID: string,
     recipientECert: string,
     lockerECert: string,
-): Promise<any> => {
+): Promise<boolean> => {
 
     if (!contract)
     {
@@ -630,7 +630,7 @@ const isAssetLockedInHTLC = async (
 const isAssetLockedInHTLCqueryUsingContractId = async (
     contract: Contract,
     contractId: string,
-): Promise<any> => {
+): Promise<boolean> => {
 
     if (!contract)
     {
@@ -660,7 +660,7 @@ const isAssetLockedInHTLCqueryUsingContractId = async (
 const isFungibleAssetLockedInHTLC = async (
     contract: Contract,
     contractId: string,
-): Promise<any> => {
+): Promise<boolean> => {
 
     if (!contract)
     {
@@ -847,7 +847,7 @@ const assetLockExpirationCallback = (
                 do {
                     let [retryReclaimResult, retryReclaimableQueryError] = await helpers.handlePromise(reclaimAssetInHTLCusingContractId(contract, contractID, endorsingOrgs));
                     if (!retryReclaimableQueryError) {
-                        console.log("Nonfungible Asset unlocked successfully");
+                        logger.info("Nonfungible Asset unlocked successfully");
                         break;
                     }
 
@@ -899,7 +899,7 @@ const fungibleAssetLockExpirationCallback = (
                 do {
                     let [retryReclaimResult, retryReclaimableQueryError] = await helpers.handlePromise(reclaimFungibleAssetInHTLC(contract, contractID, endorsingOrgs));
                     if (!retryReclaimableQueryError) {
-                        console.log("Fungible Asset unlocked successfully");
+                        logger.info("Fungible Asset unlocked successfully");
                         break;
                     }
 

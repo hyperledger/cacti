@@ -18,7 +18,7 @@ import 'dotenv/config';
 import { loadEventSubscriptionsFromStorage, monitorBlockForMissedEvents } from './listener'
 import { walletSetup } from './walletSetup';
 import { subscribeEventHelper, unsubscribeEventHelper, signEventSubscriptionQuery, writeExternalStateHelper } from "./events"
-import { performLockHelper, createAssetHelper, extinguishHelper, assignAssetHelper } from "./satp"
+import { performLockHelper, createAssetHelper, extinguishHelper, assignAssetHelper } from "./sample-satp"
 import * as path from 'path';
 import { handlePromise, relayCallback, getRelayClientForQueryResponse, getRelayClientForEventSubscription, delay } from './utils';
 import { dbConnectionTest, eventSubscriptionTest } from "./tests"
