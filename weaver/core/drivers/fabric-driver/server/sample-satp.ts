@@ -13,7 +13,7 @@ import { getDriverKeyCert } from './walletSetup';
 async function performLockHelper(
     performLockRequest: driverPb.PerformLockRequest,
     networkName: string
-): Promise<void> {
+): Promise<unknown> {
 
     // TODO: remove the hardcoded values 
     let performLockRequest2 = {};
@@ -102,7 +102,7 @@ async function performLockHelper(
         logger.info('Asset has been locked successfully')
 
     } catch (error) {
-        console.error(`Could not Lock ${asset} in ${targetNetwork}`)
+        logger.error(`Could not Lock ${asset} in ${targetNetwork}`)
     } finally {
         if (gateway) {
             await gateway.disconnect();
@@ -120,7 +120,7 @@ async function performLockHelper(
 async function createAssetHelper(
     createAssetRequest: driverPb.CreateAssetRequest,
     networkName: string
-): Promise<void> {
+): Promise<unknown> {
 
     // TODO: remove the hardcoded values 
     let createAssetRequest2 = {};
@@ -185,7 +185,7 @@ async function createAssetHelper(
             logger.debug('No Response from network')
         }
     } catch (error) {
-        console.error(`Failed to submit transaction: ${error}`)
+        logger.error(`Failed to submit transaction: ${error}`)
         throw new Error(error)
     } finally {
         if (gateway) {
@@ -204,7 +204,7 @@ async function createAssetHelper(
 async function extinguishHelper(
     extinguishRequest: driverPb.ExtinguishRequest,
     networkName: string
-): Promise<void> {
+): Promise<unknown> {
 
     // TODO: run the appropriate extinguish logic
     const client = getRelayClientForAssetStatusResponse();
@@ -217,7 +217,7 @@ async function extinguishHelper(
 async function assignAssetHelper(
     assignAssetRequest: driverPb.AssignAssetRequest,
     networkName: string
-): Promise<void> {
+): Promise<unknown> {
 
     // TODO: remove the hardcoded values 
     let assignAssetRequest2 = {};
@@ -277,7 +277,7 @@ async function assignAssetHelper(
 
             // TODO
         } catch (error) {
-            console.error(`Could not assign ${asset} in ${targetNetwork}`)
+            logger.error(`Could not assign ${asset} in ${targetNetwork}`)
             throw new Error(`Could not assign ${asset} in ${targetNetwork}`)
         } finally {
             if (gateway) {
@@ -302,7 +302,7 @@ async function assignAssetHelper(
             logger.info(`${asset} assigned complete: ${res}`)
             logger.info(`Asset ${asset} assign complete: ${res}`)
         } catch (error) {
-            console.error(`Could not assign non-fungible ${asset} in ${targetNetwork}: ${error}`)
+            logger.error(`Could not assign non-fungible ${asset} in ${targetNetwork}: ${error}`)
             throw new Error(`Could not assign non-fungible ${asset} in ${targetNetwork}: ${error}`)
         } finally {
             if (gateway) {
