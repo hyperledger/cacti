@@ -639,6 +639,192 @@
         }
       }
     },
+    "/api/v1/@hyperledger/cactus-plugin-satp-hermes/continue": {
+      "post": {
+        "tags": [
+          "transaction"
+        ],
+        "summary": "Continue a transaction session",
+        "description": "Attempts to continue a previously paused transaction session using its session ID and context ID.",
+        "operationId": "Continue",
+        "x-hyperledger-cacti": {
+          "http": {
+            "verbLowerCase": "post",
+            "path": "/api/v1/@hyperledger/cactus-plugin-satp-hermes/continue"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sessionId": {
+                    "type": "string",
+                    "description": "The session ID of the transaction to be continued."
+                  },
+                  "contextId": {
+                    "type": "string",
+                    "description": "The context ID related to the transaction session."
+                  }
+                },
+                "required": [
+                  "sessionId",
+                  "contextId"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction session continuation attempted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "x-category": "response",
+                  "required": [
+                    "status",
+                    "substatus",
+                    "stage",
+                    "step",
+                    "startTime"
+                  ],
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "NOT_FOUND",
+                        "INVALID",
+                        "PENDING",
+                        "DONE",
+                        "FAILED"
+                      ],
+                      "description": "Current status of the SATP session."
+                    },
+                    "substatus": {
+                      "type": "string",
+                      "enum": [
+                        "WAIT_SOURCE_CONFIRMATIONS",
+                        "WAIT_DESTINATION_TRANSACTION",
+                        "BRIDGE_NOT_AVAILABLE",
+                        "CHAIN_NOT_AVAILABLE",
+                        "REFUND_IN_PROGRESS",
+                        "UNKNOWN_ERROR",
+                        "COMPLETED",
+                        "PARTIAL",
+                        "REFUNDED",
+                        "NOT_PROCESSABLE_REFUND_NEEDED"
+                      ],
+                      "description": "More detailed status of the SATP session."
+                    },
+                    "stage": {
+                      "type": "string",
+                      "enum": [
+                        "STAGE0",
+                        "STAGE1",
+                        "STAGE2",
+                        "STAGE3"
+                      ],
+                      "description": "Current stage of the SATP session."
+                    },
+                    "step": {
+                      "type": "string",
+                      "enum": [
+                        "transfer-initialization-claims",
+                        "conveyance-of-network-capabilities-and-parameters",
+                        "transfer-proposal-message",
+                        "transfer-proposal-receipt-message",
+                        "transfer-proposal-reject-and-conditional-reject-message",
+                        "transfer-commence-message",
+                        "commence-response-message",
+                        "lock-assertion-message",
+                        "lock-assertion-receipt-message",
+                        "commit-preparation-message",
+                        "commit-ready-message",
+                        "commit-final-assertion-message",
+                        "commit-final-acknowledgement-receipt-message",
+                        "transfer-complete-message",
+                        "rollback-transfer-initialization-claims",
+                        "rollback-conveyance-of-network-capabilities-and-parameters",
+                        "rollback-transfer-proposal-message",
+                        "rollback-transfer-proposal-receipt-message",
+                        "rollback-transfer-proposal-reject-and-conditional-reject-message",
+                        "rollback-transfer-commence-message",
+                        "rollback-commence-response-message",
+                        "rollback-lock-assertion-message",
+                        "rollback-lock-assertion-receipt-message",
+                        "rollback-commit-preparation-message",
+                        "rollback-commit-ready-message",
+                        "rollback-commit-final-assertion-message",
+                        "rollback-commit-final-acknowledgement-receipt-message",
+                        "rollback-transfer-complete-message"
+                      ],
+                      "description": "Current step within the stage of the SATP session."
+                    },
+                    "startTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "The start time of the SATP session."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error occurred or transaction session cannot be continued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "x-category": "response",
+                  "type": "object",
+                  "x-go-type": "ApiError",
+                  "x-go-name": "ApiError",
+                  "description": "An Error",
+                  "required": [
+                    "message",
+                    "type",
+                    "code",
+                    "status",
+                    "timestamp"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "HTTP error type",
+                      "example": "bad-request"
+                    },
+                    "code": {
+                      "type": "integer",
+                      "description": "Numeric error code",
+                      "example": 16384
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "HTTP status of the error",
+                      "example": 500
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Long error description",
+                      "example": "Oops there's been an internal error handling"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of the error",
+                      "example": "2021-07-21T17:32:28Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/@hyperledger/cactus-plugin-satp-hermes/status": {
       "get": {
         "summary": "Get SATP current session data",
@@ -1846,6 +2032,23 @@
             "description": "Include proofs generated from each gateway transaction."
           }
         }
+      },
+      "ContinueRequest": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "description": "The session ID of the transaction to be continued."
+          },
+          "contextId": {
+            "type": "string",
+            "description": "The context ID related to the transaction session."
+          }
+        },
+        "required": [
+          "sessionId",
+          "contextId"
+        ]
       },
       "getAuditResponse": {
         "type": "object",

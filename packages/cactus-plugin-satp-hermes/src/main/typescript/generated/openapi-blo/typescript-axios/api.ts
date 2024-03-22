@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * SATP Gateway Client (Business Logic Orchestrator)
- * SATP is a protocol operating between two gateways that conducts the transfer of a digital asset from one gateway to another. The protocol establishes a secure channel between the endpoints and implements a 2-phase commit to ensure the properties of transfer atomicity, consistency, isolation and durability.  This API defines the gateway client facing API (business logic orchestrator, or BLO), which is named API-Type  in the SATP-Core specification.  **Additional Resources**: - [Proposed SATP Charter](https://datatracker.ietf.org/doc/charter-ietf-satp/) - [SATP Core draft](https://datatracker.ietf.org/doc/draft-ietf-satp-core) - [SATP Crash Recovery draft](https://datatracker.ietf.org/doc/draft-belchior-satp-gateway-recovery/) - [SATP Architecture draft](https://datatracker.ietf.org/doc/draft-ietf-satp-architecture/) - [SATP Use-Cases draft](https://datatracker.ietf.org/doc/draft-ramakrishna-sat-use-cases/) - [SATP Data sharing draft](https://datatracker.ietf.org/doc/draft-ramakrishna-satp-data-sharing) - [SATP View Addresses draft](https://datatracker.ietf.org/doc/draft-ramakrishna-satp-views-addresses)
+ * SATP is a protocol operating between two gateways that conducts the transfer of a digital asset from one gateway to another. The protocol establishes a secure channel between the endpoints and implements a 2-phase commit to ensure the properties of transfer atomicity, consistency, isolation and durability.  This API defines the gateway client facing API (business logic orchestrator, or BLO), which is named API-Type 1 in the SATP-Core specification.  **Additional Resources**: - [Proposed SATP Charter](https://datatracker.ietf.org/doc/charter-ietf-satp/) - [SATP Core draft](https://datatracker.ietf.org/doc/draft-ietf-satp-core) - [SATP Crash Recovery draft](https://datatracker.ietf.org/doc/draft-belchior-satp-gateway-recovery/) - [SATP Architecture draft](https://datatracker.ietf.org/doc/draft-ietf-satp-architecture/) - [SATP Use-Cases draft](https://datatracker.ietf.org/doc/draft-ramakrishna-sat-use-cases/) - [SATP Data sharing draft](https://datatracker.ietf.org/doc/draft-ramakrishna-satp-data-sharing) - [SATP View Addresses draft](https://datatracker.ietf.org/doc/draft-ramakrishna-satp-views-addresses)
  *
  * The version of the OpenAPI document: v0.0.1
  * 
@@ -202,6 +202,25 @@ export interface CancelResponse {
      * @memberof CancelResponse
      */
     'cancelSuccessful': boolean;
+}
+/**
+ * 
+ * @export
+ * @interface ContinueRequest
+ */
+export interface ContinueRequest {
+    /**
+     * The session ID of the transaction to be continued.
+     * @type {string}
+     * @memberof ContinueRequest
+     */
+    'sessionId': string;
+    /**
+     * The context ID related to the transaction session.
+     * @type {string}
+     * @memberof ContinueRequest
+     */
+    'contextId': string;
 }
 /**
  * 
@@ -1831,6 +1850,42 @@ export class AdminApi extends BaseAPI {
 export const TransactionApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
+         * Attempts to continue a previously paused transaction session using its session ID and context ID.
+         * @summary Continue a transaction session
+         * @param {ContinueRequest} continueRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        _continue: async (continueRequest: ContinueRequest, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'continueRequest' is not null or undefined
+            assertParamExists('_continue', 'continueRequest', continueRequest)
+            const localVarPath = `/api/v1/@hyperledger/cactus-plugin-satp-hermes/continue`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(continueRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Attempts to cancel a previously submitted transaction intent using its session ID.
          * @summary Cancel a transaction session
          * @param {CancelRequest} cancelRequest 
@@ -1992,6 +2047,17 @@ export const TransactionApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = TransactionApiAxiosParamCreator(configuration)
     return {
         /**
+         * Attempts to continue a previously paused transaction session using its session ID and context ID.
+         * @summary Continue a transaction session
+         * @param {ContinueRequest} continueRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async _continue(continueRequest: ContinueRequest, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Transact200ResponseStatusResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator._continue(continueRequest, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
          * Attempts to cancel a previously submitted transaction intent using its session ID.
          * @summary Cancel a transaction session
          * @param {CancelRequest} cancelRequest 
@@ -2041,6 +2107,16 @@ export const TransactionApiFactory = function (configuration?: Configuration, ba
     const localVarFp = TransactionApiFp(configuration)
     return {
         /**
+         * Attempts to continue a previously paused transaction session using its session ID and context ID.
+         * @summary Continue a transaction session
+         * @param {ContinueRequest} continueRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        _continue(continueRequest: ContinueRequest, options?: any): AxiosPromise<Transact200ResponseStatusResponse> {
+            return localVarFp._continue(continueRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Attempts to cancel a previously submitted transaction intent using its session ID.
          * @summary Cancel a transaction session
          * @param {CancelRequest} cancelRequest 
@@ -2086,6 +2162,18 @@ export const TransactionApiFactory = function (configuration?: Configuration, ba
  * @extends {BaseAPI}
  */
 export class TransactionApi extends BaseAPI {
+    /**
+     * Attempts to continue a previously paused transaction session using its session ID and context ID.
+     * @summary Continue a transaction session
+     * @param {ContinueRequest} continueRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof TransactionApi
+     */
+    public _continue(continueRequest: ContinueRequest, options?: AxiosRequestConfig) {
+        return TransactionApiFp(this.configuration)._continue(continueRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * Attempts to cancel a previously submitted transaction intent using its session ID.
      * @summary Cancel a transaction session

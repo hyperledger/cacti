@@ -39,6 +39,22 @@
       }
     }
   },
+"ContinueRequest": {
+  "type": "object",
+  "properties": {
+    "sessionId": {
+      "type": "string",
+      "description": "The session ID of the transaction to be continued."
+    },
+    "contextId": {
+      "type": "string",
+      "description": "The context ID related to the transaction session."
+    }
+  },
+  "required": ["sessionId", "contextId"],
+},
+
+
   "getAuditResponse": {
     "type": "object",
     "x-category": "response",

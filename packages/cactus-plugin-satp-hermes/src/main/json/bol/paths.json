@@ -91,6 +91,52 @@
       }
     }
   },
+  "/api/v1/@hyperledger/cactus-plugin-satp-hermes/continue": {
+  "post": {
+    "tags": ["transaction"],
+    "summary": "Continue a transaction session",
+    "description": "Attempts to continue a previously paused transaction session using its session ID and context ID.",
+    "operationId": "Continue",
+    "x-hyperledger-cacti": {
+      "http": {
+        "verbLowerCase": "post",
+        "path": "/api/v1/@hyperledger/cactus-plugin-satp-hermes/continue"
+      }
+    },
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "$ref": "./schemas.json#/ContinueRequest"
+          }
+        }
+      },
+      "required": true
+    },
+    "responses": {
+      "200": {
+        "description": "Transaction session continuation attempted",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/StatusResponse"
+            }
+          }
+        }
+      },
+      "default": {
+        "description": "An error occurred or transaction session cannot be continued",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./schemas.json#/APIError"
+            }
+          }
+        }
+      }
+    }
+  }
+},
   "/api/v1/@hyperledger/cactus-plugin-satp-hermes/status": {
     "get": {
       "summary": "Get SATP current session data",
