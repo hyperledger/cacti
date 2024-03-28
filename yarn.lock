@@ -7475,7 +7475,7 @@ __metadata:
     typedoc: "npm:0.25.6"
     typescript: "npm:5.3.3"
     web3: "npm:1.10.0"
-    web3-utils: "npm:1.10.0"
+    web3-utils: "npm:1.5.3"
   languageName: unknown
   linkType: soft
 
@@ -7752,7 +7752,7 @@ __metadata:
     typescript-optional: "npm:2.0.1"
     uuid: "npm:9.0.1"
     web3-core: "npm:1.6.1"
-    web3-utils: "npm:1.6.1"
+    web3-utils: "npm:1.5.3"
   languageName: unknown
   linkType: soft
 
@@ -7865,7 +7865,7 @@ __metadata:
     typescript-optional: "npm:2.0.1"
     uuid: "npm:9.0.1"
     web3-core: "npm:1.5.2"
-    web3-utils: "npm:1.5.2"
+    web3-utils: "npm:1.5.3"
   languageName: unknown
   linkType: soft
 
@@ -8165,7 +8165,7 @@ __metadata:
     typescript-optional: "npm:2.0.1"
     uuid: "npm:9.0.1"
     web3-eth-abi: "npm:4.0.3"
-    web3-utils: "npm:4.0.3"
+    web3-utils: "npm:1.5.3"
   languageName: unknown
   linkType: soft
 
@@ -8411,7 +8411,7 @@ __metadata:
     web3-core: "npm:1.6.1"
     web3-eth: "npm:1.6.1"
     web3-eth-contract: "npm:1.6.1"
-    web3-utils: "npm:1.6.1"
+    web3-utils: "npm:1.5.3"
     web3js-quorum: "npm:22.4.0"
   languageName: unknown
   linkType: soft
@@ -8596,7 +8596,7 @@ __metadata:
     web3-core: "npm:1.8.1"
     web3-core-subscriptions: "npm:1.8.1"
     web3-eth: "npm:1.8.1"
-    web3-utils: "npm:1.8.1"
+    web3-utils: "npm:1.5.3"
   languageName: unknown
   linkType: soft
 
@@ -8744,7 +8744,7 @@ __metadata:
     web3-core-helpers: "npm:1.6.1"
     web3-eth: "npm:1.6.1"
     web3-eth-contract: "npm:1.6.1"
-    web3-utils: "npm:1.6.1"
+    web3-utils: "npm:1.5.3"
     web3js-quorum: "npm:22.4.0"
   bin:
     cacti-quorum-connector-status: dist/lib/scripts/get-quorum-connector-status.js
@@ -8843,7 +8843,7 @@ __metadata:
     web3-core: "npm:1.6.1"
     web3-eth: "npm:1.6.1"
     web3-eth-contract: "npm:1.6.1"
-    web3-utils: "npm:1.6.1"
+    web3-utils: "npm:1.5.3"
   languageName: unknown
   linkType: soft
 
@@ -8900,7 +8900,7 @@ __metadata:
     uuid: "npm:9.0.1"
     web3: "npm:4.0.3"
     web3-eth-accounts: "npm:4.0.3"
-    web3-utils: "npm:4.0.6"
+    web3-utils: "npm:1.5.3"
     web3-validator: "npm:2.0.2"
   languageName: unknown
   linkType: soft
@@ -8965,7 +8965,7 @@ __metadata:
     typescript-optional: "npm:2.0.1"
     uuid: "npm:9.0.1"
     web3: "npm:1.6.1"
-    web3-utils: "npm:1.6.1"
+    web3-utils: "npm:1.5.3"
   languageName: unknown
   linkType: soft
 
@@ -9057,7 +9057,7 @@ __metadata:
     express: "npm:4.19.2"
     uuid: "npm:9.0.1"
     web3-eth-abi: "npm:4.0.3"
-    web3-utils: "npm:4.0.3"
+    web3-utils: "npm:1.5.3"
   languageName: unknown
   linkType: soft
 
@@ -9153,7 +9153,7 @@ __metadata:
     uuid: "npm:9.0.1"
     web3: "npm:1.6.1"
     web3-core-helpers: "npm:1.6.1"
-    web3-utils: "npm:1.6.1"
+    web3-utils: "npm:1.5.3"
   languageName: unknown
   linkType: soft
 
@@ -9206,7 +9206,7 @@ __metadata:
     uuid: "npm:9.0.1"
     web3: "npm:1.6.1"
     web3-core: "npm:1.6.1"
-    web3-utils: "npm:1.6.1"
+    web3-utils: "npm:1.5.3"
   languageName: unknown
   linkType: soft
 
@@ -9382,7 +9382,7 @@ __metadata:
     web3: "npm:4.1.1"
     web3-core: "npm:4.1.1"
     web3-eth: "npm:4.1.1"
-    web3-utils: "npm:4.0.5"
+    web3-utils: "npm:1.5.3"
     webpack: "npm:5.88.2"
     webpack-cli: "npm:4.10.0"
     wget-improved: "npm:3.4.0"
@@ -52748,6 +52748,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"web3-utils@npm:1.5.3":
+  version: 1.5.3
+  resolution: "web3-utils@npm:1.5.3"
+  dependencies:
+    bn.js: "npm:^4.11.9"
+    eth-lib: "npm:0.2.8"
+    ethereum-bloom-filters: "npm:^1.0.6"
+    ethjs-unit: "npm:0.1.6"
+    number-to-bn: "npm:1.7.0"
+    randombytes: "npm:^2.1.0"
+    utf8: "npm:3.0.0"
+  checksum: 10/2a2618fcba87a8e63eaa831b8b8e6f606020688ec1310f58bf5ea9bd8042e8cf1e0b7a0fef0614ee75bcde2bc31ea437755012778d97a3748d12562ebe2bfe38
+  languageName: node
+  linkType: hard
+
 "web3-utils@npm:1.6.1":
   version: 1.6.1
   resolution: "web3-utils@npm:1.6.1"
@@ -52808,7 +52823,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web3-utils@npm:4.0.3, web3-utils@npm:^4.0.3":
+"web3-utils@npm:^4.0.3":
   version: 4.0.3
   resolution: "web3-utils@npm:4.0.3"
   dependencies:
@@ -52820,7 +52835,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web3-utils@npm:4.0.5, web3-utils@npm:^4.0.5":
+"web3-utils@npm:^4.0.5":
   version: 4.0.5
   resolution: "web3-utils@npm:4.0.5"
   dependencies:
@@ -52829,18 +52844,6 @@ __metadata:
     web3-types: "npm:^1.1.1"
     web3-validator: "npm:^2.0.1"
   checksum: 10/886c99b921765ccff9015ca4b9218d33058fa398ef905f24bbfc0d25054331dfa8cfb54de4eff906163b1109c86bf90c3a6ac0200248ec4ac5dac1fa77ab859c
-  languageName: node
-  linkType: hard
-
-"web3-utils@npm:4.0.6":
-  version: 4.0.6
-  resolution: "web3-utils@npm:4.0.6"
-  dependencies:
-    ethereum-cryptography: "npm:^2.0.0"
-    web3-errors: "npm:^1.1.2"
-    web3-types: "npm:^1.2.0"
-    web3-validator: "npm:^2.0.2"
-  checksum: 10/34bbef647ce3219eb502919e9a229e182f59ab90e3fdda9cf603db0623daae30d840ae1baae896d75b6f4a54fb7840cc54758f41d3ff859f33f8a87ef24c8cfd
   languageName: node
   linkType: hard
 
@@ -52880,7 +52883,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web3-validator@npm:2.0.2, web3-validator@npm:^2.0.2":
+"web3-validator@npm:2.0.2":
   version: 2.0.2
   resolution: "web3-validator@npm:2.0.2"
   dependencies:
