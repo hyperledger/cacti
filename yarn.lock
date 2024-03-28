@@ -8116,6 +8116,39 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hyperledger/cactus-plugin-bungee-hermes@workspace:packages/cactus-plugin-bungee-hermes":
+  version: 0.0.0-use.local
+  resolution: "@hyperledger/cactus-plugin-bungee-hermes@workspace:packages/cactus-plugin-bungee-hermes"
+  dependencies:
+    "@hyperledger/cactus-cmd-api-server": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-common": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-core": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-core-api": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-plugin-keychain-memory": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-plugin-ledger-connector-besu": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-plugin-ledger-connector-fabric": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-plugin-object-store-ipfs": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-test-tooling": "npm:2.0.0-alpha.2"
+    "@types/body-parser": "npm:1.19.4"
+    "@types/crypto-js": "npm:4.0.1"
+    "@types/express": "npm:4.17.19"
+    "@types/fs-extra": "npm:11.0.3"
+    "@types/tape": "npm:4.13.4"
+    "@types/uuid": "npm:9.0.6"
+    axios: "npm:1.6.0"
+    body-parser: "npm:1.20.2"
+    express: "npm:4.18.2"
+    fabric-network: "npm:2.2.20"
+    fs-extra: "npm:10.1.0"
+    key-encoder: "npm:2.0.3"
+    socket.io: "npm:4.5.4"
+    typescript-optional: "npm:2.0.1"
+    uuid: "npm:9.0.1"
+    web3: "npm:1.6.1"
+    web3-core: "npm:1.6.1"
+  languageName: unknown
+  linkType: soft
+
 "@hyperledger/cactus-plugin-consortium-manual@npm:2.0.0-alpha.2, @hyperledger/cactus-plugin-consortium-manual@workspace:packages/cactus-plugin-consortium-manual":
   version: 0.0.0-use.local
   resolution: "@hyperledger/cactus-plugin-consortium-manual@workspace:packages/cactus-plugin-consortium-manual"
@@ -15874,6 +15907,13 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10/53e23a1f9fb14a491c00425b2a4fc443817564d77be5e1b95fcbeb6d009551b62ea82ffc3e5ca0c6b9f6b186824ca6ec46e7450c1bcd6674a46d1325f0116e24
+  languageName: node
+  linkType: hard
+
+"@types/uuid@npm:9.0.6":
+  version: 9.0.6
+  resolution: "@types/uuid@npm:9.0.6"
+  checksum: 10/739dcb2e620ff097fa916edeab455eb75640c4883a850784fdb15b32f67b719e05275c6d6419bb6da11350d26bd14ed05ba5e992ff228411cdd98cbc772d71ef
   languageName: node
   linkType: hard
 
