@@ -1,10 +1,9 @@
 import { Logger, LoggerProvider } from "@hyperledger/cactus-common";
 import { SATPBridgeManager } from "./satp-bridge-manager";
-import { SATPGateway } from "../../../gateway-refactor";
 import { BesuConfig } from "../../../types/blockchain-interaction";
 import { EthContractInvocationType } from "@hyperledger/cactus-plugin-ledger-connector-besu";
 import { InvokeContractV1Request as BesuInvokeContractV1Request } from "@hyperledger/cactus-plugin-ledger-connector-besu";
-import { storeLog } from "../../../gateway-utils";
+import { SATPSession } from "../../satp-session";
 
 export class BesuBridgeManager implements SATPBridgeManager {
   public static readonly CLASS_NAME = "BesuBridgeManager";
@@ -14,7 +13,6 @@ export class BesuBridgeManager implements SATPBridgeManager {
   public get log(): Logger {
     return this._log;
   }
-  private gateway: SATPGateway;
 
   private besuConfig: BesuConfig;
 
@@ -22,30 +20,39 @@ export class BesuBridgeManager implements SATPBridgeManager {
     return BesuBridgeManager.CLASS_NAME;
   }
 
-  public constructor(gateway: SATPGateway, besuConfig: BesuConfig) {
-    this.gateway = gateway;
+  public constructor(besuConfig: BesuConfig) {
     this.besuConfig = besuConfig;
     const level = "INFO";
     const label = BesuBridgeManager.CLASS_NAME;
     this._log = LoggerProvider.getOrCreate({ level, label });
   }
 
-  public async lockAsset(sessionId: string, assetId: string): Promise<string> {
+  public async lockAsset(
+    session: SATPSession | undefined,
+    assetId: string,
+  ): Promise<string> {
     const fnTag = `${this.className}#lockAssetBesu()`;
 
-    const sessionData = this.gateway.getSession(sessionId);
-
-    if (sessionData == undefined) {
-      throw new Error(`${fnTag}, session data is not correctly initialized`);
+    if (session == undefined) {
+      throw new Error(`${fnTag}, session is undefined`);
     }
+
+    const sessionData = session.getSessionData();
+
+    if (sessionData == null) {
+      throw new Error(`session data not found`);
+    }
+
     let besuLockAssetProof = "";
 
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "exec",
       operation: "lock-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     const besuAssetLock = await this.besuConfig.besuApi.invokeContractV1({
       contractName: this.besuConfig.contractName,
@@ -80,6 +87,7 @@ export class BesuBridgeManager implements SATPBridgeManager {
 
     this.log.info(`${fnTag}, proof of the asset lock: ${besuLockAssetProof}`);
 
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "proof",
@@ -93,30 +101,35 @@ export class BesuBridgeManager implements SATPBridgeManager {
       operation: "lock-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     return besuLockAssetProof;
   }
   public async unlockAsset(
-    sessionId: string,
+    session: SATPSession | undefined,
     assetId: string,
   ): Promise<string> {
     const fnTag = `${this.className}#unlockAssetBesu()`;
 
-    const sessionData = this.gateway.getSession(sessionId);
+    if (session == undefined) {
+      throw new Error(`${fnTag}, session is undefined`);
+    }
 
-    if (sessionData == undefined) {
-      throw new Error(`${fnTag}, session data is not correctly initialized`);
+    const sessionData = session.getSessionData();
+
+    if (sessionData == null) {
+      throw new Error(`session data not found`);
     }
 
     let besuUnlockAssetProof = "";
-
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "exec-rollback",
       operation: "unlock-asset",
       data: JSON.stringify(sessionData),
     });
-
+    */
     const assetUnlockResponse = await this.besuConfig.besuApi.invokeContractV1({
       contractName: this.besuConfig.contractName,
       invocationType: EthContractInvocationType.Send,
@@ -155,7 +168,7 @@ export class BesuBridgeManager implements SATPBridgeManager {
     this.log.info(
       `${fnTag}, proof of the asset unlock: ${besuUnlockAssetProof}`,
     );
-
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "proof-rollback",
@@ -169,26 +182,34 @@ export class BesuBridgeManager implements SATPBridgeManager {
       operation: "unlock-asset",
       data: JSON.stringify(sessionData),
     });
-
+  */
     return besuUnlockAssetProof;
   }
-  public async mintAsset(sessionId: string, assetId: string): Promise<string> {
+  public async mintAsset(
+    session: SATPSession | undefined,
+    assetId: string,
+  ): Promise<string> {
     const fnTag = `${this.className}#mintAssetBesu()`;
 
-    const sessionData = this.gateway.getSession(sessionId);
+    if (session == undefined) {
+      throw new Error(`${fnTag}, session is undefined`);
+    }
+
+    const sessionData = session.getSessionData();
 
     if (sessionData == undefined || sessionData.assetProfile == undefined) {
       throw new Error(`${fnTag}, session data is not correctly initialized`);
     }
 
     let besuCreateAssetProof = "";
-
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "exec",
       operation: "mint-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     const amount = sessionData.assetProfile.keyInformationLink[0].toString();
     const userEthAddress =
@@ -228,7 +249,7 @@ export class BesuBridgeManager implements SATPBridgeManager {
     this.log.info(
       `${fnTag}, proof of the asset creation: ${besuCreateAssetProof}`,
     );
-
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "proof",
@@ -242,26 +263,35 @@ export class BesuBridgeManager implements SATPBridgeManager {
       operation: "create-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     return besuCreateAssetProof;
   }
-  public async burnAsset(sessionId: string, assetId: string): Promise<string> {
+  public async burnAsset(
+    session: SATPSession | undefined,
+    assetId: string,
+  ): Promise<string> {
     const fnTag = `${this.className}#burnAssetBesu()`;
 
-    const sessionData = this.gateway.getSession(sessionId);
+    if (session == undefined) {
+      throw new Error(`${fnTag}, session is undefined`);
+    }
 
-    if (sessionData == undefined) {
-      throw new Error(`${fnTag}, session data is not correctly initialized`);
+    const sessionData = session.getSessionData();
+
+    if (sessionData == null) {
+      throw new Error(`session data not found`);
     }
 
     let besuDeleteAssetProof = "";
-
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "exec",
       operation: "delete-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     const besuAssetDeletion = await this.besuConfig.besuApi.invokeContractV1({
       contractName: this.besuConfig.contractName,
@@ -298,7 +328,7 @@ export class BesuBridgeManager implements SATPBridgeManager {
     this.log.info(
       `${fnTag}, proof of the asset deletion: ${besuDeleteAssetProof}`,
     );
-
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "proof",
@@ -312,31 +342,36 @@ export class BesuBridgeManager implements SATPBridgeManager {
       operation: "delete-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     return besuDeleteAssetProof;
   }
   public async assignAsset(
-    sessionId: string,
+    session: SATPSession | undefined,
     assetId: string,
     recipient: string,
   ): Promise<string> {
     const fnTag = `${this.className}#burnAssetBesu()`;
 
-    const sessionData = this.gateway.getSession(sessionId);
+    if (session == undefined) {
+      throw new Error(`${fnTag}, session is undefined`);
+    }
 
-    if (sessionData == undefined) {
-      throw new Error(`${fnTag}, session data is not correctly initialized`);
+    const sessionData = session.getSessionData();
+
+    if (sessionData == null) {
+      throw new Error(`session data not found`);
     }
 
     let besuAssignProof = "";
-
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "exec",
       operation: "assign-asset",
       data: JSON.stringify(sessionData),
     });
-
+    */
     const besuAssetDeletion = await this.besuConfig.besuApi.invokeContractV1({
       contractName: this.besuConfig.contractName,
       invocationType: EthContractInvocationType.Send,
@@ -370,7 +405,7 @@ export class BesuBridgeManager implements SATPBridgeManager {
     sessionData.burnAssertionClaim = besuAssignProof;
 
     this.log.info(`${fnTag}, proof of the asset deletion: ${besuAssignProof}`);
-
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "proof",
@@ -384,7 +419,7 @@ export class BesuBridgeManager implements SATPBridgeManager {
       operation: "delete-asset",
       data: JSON.stringify(sessionData),
     });
-
+    */
     return besuAssignProof;
   }
   public async verifyAssetExistence(

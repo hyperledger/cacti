@@ -308,8 +308,6 @@ export class Stage1ClientService extends SATPService {
       throw new Error(`${fnTag}, satp common body is missing required fields`);
     }
 
-    // const sessionId = response.common.sessionId;
-
     const sessionData = session.getSessionData();
 
     if (sessionData == undefined) {

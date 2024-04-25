@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // import {
 //   JsObjectSigner,
 //   Logger,
@@ -31,6 +32,40 @@
 // } from "../../../types/satp-protocol";
 // import { SATPSession } from "../../satp-session";
 // import { LockAssertionReceiptMessage } from "../../../generated/proto/cacti/satp/v02/stage_2_pb";
+=======
+import {
+  JsObjectSigner,
+  Logger,
+  LoggerProvider,
+} from "@hyperledger/cactus-common";
+import { SATPGateway } from "../../../plugin-satp-hermes-gateway";
+import {
+  CommonSatp,
+  MessageType,
+} from "../../../generated/proto/cacti/satp/v02/common/message_pb";
+import { SATP_VERSION } from "../../constants";
+import {
+  CommitFinalAcknowledgementReceiptResponseMessage,
+  CommitFinalAssertionRequestMessage,
+  CommitPreparationRequestMessage,
+  CommitReadyResponseMessage,
+  TransferCompleteRequestMessage,
+} from "../../../generated/proto/cacti/satp/v02/stage_3_pb";
+import {
+  bufArray2HexStr,
+  getHash,
+  sign,
+  verifySignature,
+} from "../../../gateway-utils";
+import { getMessageHash, saveHash, saveSignature } from "../../session-utils";
+import {
+  SATPService,
+  ISATPClientServiceOptions,
+  SATPServiceType,
+} from "../../../types/satp-protocol";
+import { SATPSession } from "../../satp-session";
+import { LockAssertionReceiptMessage } from "../../../generated/proto/cacti/satp/v02/stage_2_pb";
+>>>>>>> a6ea863fd (feat(satp-hermes): new session data architeture)
 
 // export class Stage3ClientService implements SATPService {
 //   public static readonly CLASS_NAME = "client-service";

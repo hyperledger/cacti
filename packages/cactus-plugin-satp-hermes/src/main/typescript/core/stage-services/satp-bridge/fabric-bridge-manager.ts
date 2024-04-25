@@ -2,11 +2,10 @@ import {
   FabricContractInvocationType,
   RunTransactionRequest,
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
-import { SATPGateway } from "../../../gateway-refactor";
-import { storeLog, storeProof } from "../../../gateway-utils";
 import { FabricConfig } from "../../../types/blockchain-interaction";
 import { SATPBridgeManager } from "./satp-bridge-manager";
 import { Logger, LoggerProvider } from "@hyperledger/cactus-common";
+import { SATPSession } from "../../satp-session";
 
 export class FabricBridgeManager implements SATPBridgeManager {
   public static readonly CLASS_NAME = "FabricBridgeManager";
@@ -16,7 +15,6 @@ export class FabricBridgeManager implements SATPBridgeManager {
   public get log(): Logger {
     return this._log;
   }
-  private gateway: SATPGateway;
 
   private fabricConfig: FabricConfig;
 
@@ -24,30 +22,38 @@ export class FabricBridgeManager implements SATPBridgeManager {
     return FabricBridgeManager.CLASS_NAME;
   }
 
-  public constructor(gateway: SATPGateway, fabricConfig: FabricConfig) {
-    this.gateway = gateway;
+  public constructor(fabricConfig: FabricConfig) {
     this.fabricConfig = fabricConfig;
     const level = "INFO";
     const label = FabricBridgeManager.CLASS_NAME;
     this._log = LoggerProvider.getOrCreate({ level, label });
   }
-  public async lockAsset(sessionId: string, assetId: string): Promise<string> {
+  public async lockAsset(
+    session: SATPSession | undefined,
+    assetId: string,
+  ): Promise<string> {
     const fnTag = `${this.className}#lockAssetFabric()`;
 
-    const sessionData = this.gateway.getSession(sessionId);
+    if (session == undefined) {
+      throw new Error(`${fnTag}, session is undefined`);
+    }
+
+    const sessionData = session.getSessionData();
 
     if (sessionData == null) {
-      throw new Error(`Session not found for ID ${sessionId}`);
+      throw new Error(`session data not found`);
     }
 
     let fabricLockAssetProof = "";
 
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "exec",
       operation: "lock-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     //todo: handle errors here
     const response = await this.fabricConfig.fabricApi.runTransactionV1({
@@ -75,6 +81,7 @@ export class FabricBridgeManager implements SATPBridgeManager {
 
     this.log.info(`${fnTag}, proof of the asset lock: ${fabricLockAssetProof}`);
 
+    /*
     await storeProof(this.gateway, {
       sessionID: sessionId,
       type: "proof",
@@ -88,30 +95,37 @@ export class FabricBridgeManager implements SATPBridgeManager {
       operation: "lock-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     return fabricLockAssetProof;
   }
 
   public async unlockAsset(
-    sessionId: string,
+    session: SATPSession | undefined,
     assetId: string,
   ): Promise<string> {
     const fnTag = `${this.className}#unlockAssetFabric()`;
 
-    const sessionData = this.gateway.getSession(sessionId);
+    if (session == undefined) {
+      throw new Error(`${fnTag}, session is undefined`);
+    }
+
+    const sessionData = session.getSessionData();
 
     if (sessionData == null) {
-      throw new Error(`Session not found for ID ${sessionId}`);
+      throw new Error(`session data not found`);
     }
 
     let fabricUnlockAssetProof = "";
 
+    /*
     await storeLog(this.gateway, {
       sessionID: sessionId,
       type: "exec-rollback",
       operation: "unlock-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     const response = await this.fabricConfig.fabricApi.runTransactionV1({
       signingCredential: this.fabricConfig.signingCredential,
@@ -141,6 +155,7 @@ export class FabricBridgeManager implements SATPBridgeManager {
       `${fnTag}, proof of the asset unlock: ${fabricUnlockAssetProof}`,
     );
 
+    /*
     await storeProof(this.gateway, {
       sessionID: sessionId,
       type: "proof",
@@ -154,27 +169,35 @@ export class FabricBridgeManager implements SATPBridgeManager {
       operation: "unlock-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     return fabricUnlockAssetProof;
   }
 
-  public async mintAsset(sessionId: string, assetId: string): Promise<string> {
+  public async mintAsset(
+    session: SATPSession | undefined,
+    assetId: string,
+  ): Promise<string> {
     const fnTag = `${this.className}#mintAssetFabric()`;
 
-    const sessionData = this.gateway.getSession(sessionId);
-
-    if (sessionData == null) {
-      throw new Error(`Session not found for ID ${sessionId}`);
+    if (session == undefined) {
+      throw new Error(`${fnTag}, session is undefined`);
     }
 
-    let fabricMintAssetProof = "";
+    const sessionData = session.getSessionData();
 
+    if (sessionData == null) {
+      throw new Error(`session data not found`);
+    }
+    let fabricMintAssetProof = "";
+    /*
     await storeProof(this.gateway, {
       sessionID: sessionId,
       type: "proof",
       operation: "mint-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     const response = await this.fabricConfig.fabricApi.runTransactionV1({
       contractName: this.fabricConfig.contractName,
@@ -203,7 +226,7 @@ export class FabricBridgeManager implements SATPBridgeManager {
     this.log.info(
       `${fnTag}, proof of the asset creation: ${fabricMintAssetProof}`,
     );
-
+    /*
     await storeProof(this.gateway, {
       sessionID: sessionId,
       type: "proof",
@@ -217,27 +240,36 @@ export class FabricBridgeManager implements SATPBridgeManager {
       operation: "mint-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     return fabricMintAssetProof;
   }
 
-  public async burnAsset(sessionId: string, assetId: string): Promise<string> {
+  public async burnAsset(
+    session: SATPSession | undefined,
+    assetId: string,
+  ): Promise<string> {
     const fnTag = `${this.className}#burnAssetFabric()`;
 
-    const sessionData = this.gateway.getSession(sessionId);
+    if (session == undefined) {
+      throw new Error(`${fnTag}, session is undefined`);
+    }
 
-    if (sessionData == undefined) {
-      throw new Error(`${fnTag}, session data is not correctly initialized`);
+    const sessionData = session.getSessionData();
+
+    if (sessionData == null) {
+      throw new Error(`session data not found`);
     }
 
     let fabricBurnAssetProof = "";
-
+    /*
     await storeProof(this.gateway, {
       sessionID: sessionId,
       type: "exec",
       operation: "burn-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     const burnRes = await this.fabricConfig.fabricApi.runTransactionV1({
       signingCredential: this.fabricConfig.signingCredential,
@@ -267,7 +299,7 @@ export class FabricBridgeManager implements SATPBridgeManager {
     this.log.info(
       `${fnTag}, proof of the asset deletion: ${fabricBurnAssetProof}`,
     );
-
+    /*
     await storeProof(this.gateway, {
       sessionID: sessionId,
       type: "proof",
@@ -281,29 +313,35 @@ export class FabricBridgeManager implements SATPBridgeManager {
       operation: "burn-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     return fabricBurnAssetProof;
   }
   public async assignAsset(
-    sessionId: string,
+    session: SATPSession | undefined,
     assetId: string,
   ): Promise<string> {
     const fnTag = `${this.className}#assignAssetFabric()`;
 
-    const sessionData = this.gateway.getSession(sessionId);
+    if (session == undefined) {
+      throw new Error(`${fnTag}, session is undefined`);
+    }
 
-    if (sessionData == undefined) {
-      throw new Error(`${fnTag}, session data is not correctly initialized`);
+    const sessionData = session.getSessionData();
+
+    if (sessionData == null) {
+      throw new Error(`session data not found`);
     }
 
     let fabricAssignAssetProof = "";
-
+    /*
     await storeProof(this.gateway, {
       sessionID: sessionId,
       type: "exec",
       operation: "assign-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     const burnRes = await this.fabricConfig.fabricApi.runTransactionV1({
       signingCredential: this.fabricConfig.signingCredential,
@@ -333,7 +371,7 @@ export class FabricBridgeManager implements SATPBridgeManager {
     this.log.info(
       `${fnTag}, proof of the asset deletion: ${fabricAssignAssetProof}`,
     );
-
+    /*
     await storeProof(this.gateway, {
       sessionID: sessionId,
       type: "proof",
@@ -347,6 +385,7 @@ export class FabricBridgeManager implements SATPBridgeManager {
       operation: "assign-asset",
       data: JSON.stringify(sessionData),
     });
+    */
 
     return fabricAssignAssetProof;
   }
