@@ -3,6 +3,8 @@
 import { FabricSigningCredential } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
 
 import { DefaultApi as FabricApi } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
+import { DefaultApi as BesuApi, Web3SigningCredential } from "@hyperledger/cactus-plugin-ledger-connector-besu";
+import { BesuSignTransactionEndpointV1 } from "@hyperledger/cactus-plugin-ledger-connector-besu/src/main/typescript/web-services/sign-transaction-endpoint-v1";
 
 // inject gateway, get connectors
 export type SATPLedgerConnector = string;
@@ -14,4 +16,10 @@ export interface FabricConfig {
   signingCredential: FabricSigningCredential;
   channelName: string;
   contractName: string;
+}
+export interface BesuConfig {
+  besuApi: BesuApi;
+  signingCredential: Web3SigningCredential;
+  contractName: string;
+  keyChainId: string;
 }

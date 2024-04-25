@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, protoInt64 } from "@bufbuild/protobuf";
-import { AssignmentAssertionClaimFormat, BurnAssertionClaimFormat, CredentialProfile, History, LockAssertionFormat, LockType, MintAssertionClaimsFormat, PayloadProfile, Permissions, SignatureAlgorithm, SubsequentCalls, TransferClaimsFormat } from "./message_pb.js";
+import { AssetProfile, AssignmentAssertionClaimFormat, BurnAssertionClaimFormat, CredentialProfile, History, LockAssertionFormat, LockType, MintAssertionClaimsFormat, PayloadProfile, Permissions, SignatureAlgorithm, SubsequentCalls, TransferClaimsFormat } from "./message_pb.js";
 
 /**
  * @generated from enum cacti.satp.v02.common.ACCEPTANCE
@@ -327,6 +327,11 @@ export class SessionData extends Message<SessionData> {
    */
   lockAssertionExpiration = "";
 
+  /**
+   * @generated from field: cacti.satp.v02.common.AssetProfile asset_profile = 59;
+   */
+  assetProfile?: AssetProfile;
+
   constructor(data?: PartialMessage<SessionData>) {
     super();
     proto3.util.initPartial(data, this);
@@ -393,6 +398,7 @@ export class SessionData extends Message<SessionData> {
     { no: 56, name: "client_transfer_number", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 57, name: "server_transfer_number", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 58, name: "lock_assertion_expiration", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 59, name: "asset_profile", kind: "message", T: AssetProfile },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): SessionData {
