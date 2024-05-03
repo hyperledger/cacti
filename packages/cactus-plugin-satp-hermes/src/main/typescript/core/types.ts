@@ -1,9 +1,6 @@
-import { JsObjectSigner, LogLevelDesc } from "@hyperledger/cactus-common";
 import { ValidatorOptions } from "class-validator";
 import { BLODispatcher } from "../blo/dispatcher";
 import { ISignerKeyPairs } from "@hyperledger/cactus-common/src/main/typescript/signer-key-pairs";
-import { createConnectTransport } from "@connectrpc/connect-node";
-import { SATPManager } from "../gol/satp-manager";
 import { SATPSession } from "./satp-session";
 import { SatpStage0Service } from "../generated/proto/cacti/satp/v02/stage_0_connect";
 import { SatpStage1Service } from "../generated/proto/cacti/satp/v02/stage_1_connect";
@@ -24,6 +21,8 @@ export type SATPServiceClient =
   | typeof SatpStage1Service
   | typeof SatpStage2Service
   | typeof SatpStage3Service;
+import { TransactionResponse } from "../types/blockchain-interaction";
+import { LogLevelDesc } from "@hyperledger/cactus-common";
 
 export enum CurrentDrafts {
   Core = "Core",
@@ -111,4 +110,23 @@ export interface RemoteLog {
   hash: string;
   signature: string;
   signerPubKey: string;
+}
+
+export interface SATPBridgeConfig {
+  network: NetworkBridge;
+}
+
+export abstract class NetworkBridge {
+  network!: string;
+
+  public networkName(): string {
+    return this.network;
+  }
+
+  public abstract runTransaction(
+    methodName: string,
+    params: string[],
+  ): Promise<TransactionResponse>;
+
+  public abstract getReceipt(transactionId: string): Promise<string>;
 }
