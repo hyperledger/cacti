@@ -3,7 +3,7 @@ import {
   IPluginLedgerConnectorFabricOptions,
   PluginLedgerConnectorFabric,
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
-import { NetworkBridge } from "../../types";
+import { NetworkBridge } from "./network-bridge";
 import {
   FabricConfig,
   TransactionResponse,
@@ -16,13 +16,10 @@ export class FabricBridge implements NetworkBridge {
   options: IPluginLedgerConnectorFabricOptions;
   config: FabricConfig;
 
-  constructor(
-    fabricOptions: IPluginLedgerConnectorFabricOptions,
-    fabricConfig: FabricConfig,
-  ) {
-    this.options = fabricOptions;
+  constructor(fabricConfig: FabricConfig) {
     this.config = fabricConfig;
-    this.connector = new PluginLedgerConnectorFabric(fabricOptions);
+    this.options = fabricConfig.options;
+    this.connector = new PluginLedgerConnectorFabric(fabricConfig.options);
   }
 
   public networkName(): string {

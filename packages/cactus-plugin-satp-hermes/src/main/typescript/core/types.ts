@@ -23,6 +23,7 @@ export type SATPServiceClient =
   | typeof SatpStage3Service;
 import { TransactionResponse } from "../types/blockchain-interaction";
 import { LogLevelDesc } from "@hyperledger/cactus-common";
+import { NetworkBridge } from "./stage-services/satp-bridge/network-bridge";
 
 export enum CurrentDrafts {
   Core = "Core",
@@ -114,19 +115,4 @@ export interface RemoteLog {
 
 export interface SATPBridgeConfig {
   network: NetworkBridge;
-}
-
-export abstract class NetworkBridge {
-  network!: string;
-
-  public networkName(): string {
-    return this.network;
-  }
-
-  public abstract runTransaction(
-    methodName: string,
-    params: string[],
-  ): Promise<TransactionResponse>;
-
-  public abstract getReceipt(transactionId: string): Promise<string>;
 }

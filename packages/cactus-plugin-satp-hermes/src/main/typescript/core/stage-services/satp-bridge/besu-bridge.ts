@@ -7,7 +7,7 @@ import {
   IPluginLedgerConnectorBesuOptions,
   PluginLedgerConnectorBesu,
 } from "@hyperledger/cactus-plugin-ledger-connector-besu";
-import { NetworkBridge } from "../../types";
+import { NetworkBridge } from "./network-bridge";
 
 export class BesuBridge implements NetworkBridge {
   network: string = "besu";
@@ -16,13 +16,10 @@ export class BesuBridge implements NetworkBridge {
   options: IPluginLedgerConnectorBesuOptions;
   config: BesuConfig;
 
-  constructor(
-    besuOptions: IPluginLedgerConnectorBesuOptions,
-    besuConfig: BesuConfig,
-  ) {
-    this.options = besuOptions;
+  constructor(besuConfig: BesuConfig) {
     this.config = besuConfig;
-    this.connector = new PluginLedgerConnectorBesu(besuOptions);
+    this.options = besuConfig.options;
+    this.connector = new PluginLedgerConnectorBesu(besuConfig.options);
   }
   public networkName(): string {
     return this.network;
