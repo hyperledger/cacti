@@ -3,6 +3,8 @@ import {
   IPluginLedgerConnectorFabricOptions,
   PluginLedgerConnectorFabric,
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
+import { PluginBungeeHermes } from "@hyperledger/cactus-plugin-bungee-hermes/src/main/typescript/plugin-bungee-hermes";
+import { StrategyFabric } from "@hyperledger/cactus-plugin-bungee-hermes/src/main/typescript/strategy/strategy-fabric";
 import { NetworkBridge } from "./network-bridge";
 import {
   FabricConfig,
@@ -10,9 +12,10 @@ import {
 } from "../../../types/blockchain-interaction";
 
 export class FabricBridge implements NetworkBridge {
-  network: string = "fabric";
+  network: string = "FABRIC";
 
   connector: PluginLedgerConnectorFabric;
+  bungee: PluginBungeeHermes;
   options: IPluginLedgerConnectorFabricOptions;
   config: FabricConfig;
 
@@ -20,6 +23,8 @@ export class FabricBridge implements NetworkBridge {
     this.config = fabricConfig;
     this.options = fabricConfig.options;
     this.connector = new PluginLedgerConnectorFabric(fabricConfig.options);
+    this.bungee = new PluginBungeeHermes(fabricConfig.bungeeOptions);
+    this.bungee.addStrategy(this.network, new StrategyFabric("INFO"));
   }
 
   public networkName(): string {
@@ -39,21 +44,39 @@ export class FabricBridge implements NetworkBridge {
       invocationType: FabricContractInvocationType.Send,
     });
     return {
-      transaction: response.transactionId,
-      receipt: undefined,
-      output: JSON.stringify(response),
+      transactionId: response.transactionId,
+      output: response.functionOutput,
     };
   }
 
   public async getReceipt(transactionId: string): Promise<string> {
-    const response = await this.connector.transact({
+    const networkDetails = {
+      connectorApiPath: "", //todo check this to not use api
       signingCredential: this.config.signingCredential,
-      channelName: this.config.channelName,
-      methodName: "GetBlockByTxID",
-      params: [this.config.channelName, transactionId],
       contractName: this.config.contractName,
-      invocationType: FabricContractInvocationType.Call,
-    });
-    return response.functionOutput;
+      channelName: this.config.channelName,
+      participant: "Org1MSP",
+    };
+
+    const snapshot = await this.bungee.generateSnapshot(
+      [],
+      this.network,
+      networkDetails,
+    );
+
+    const view = this.bungee.generateView(
+      snapshot,
+      "0",
+      Number.MAX_SAFE_INTEGER.toString(),
+      undefined,
+    );
+
+    // process view
+
+    if (view.view == undefined) {
+      throw new Error("View is undefined");
+    }
+
+    return view.view.getViewStr();
   }
 }

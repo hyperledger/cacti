@@ -26,15 +26,15 @@ export class SatpBridgeManager implements BridgeManager {
   public async lockAsset(assetId: string): Promise<string> {
     const fnTag = `${this.className}#lockAsset()`;
 
-    const response = await this.config.network.runTransaction("LockAsset", [
-      assetId,
-    ]);
+    const transactionId = (
+      await this.config.network.runTransaction("LockAsset", [assetId])
+    ).transactionId;
 
-    let receipt = response.receipt;
-
-    if (receipt == undefined) {
-      receipt = await this.config.network.getReceipt(response.transaction);
+    if (transactionId == undefined) {
+      throw new Error(`${fnTag}, transactionId is undefined`);
     }
+
+    const receipt = await this.config.network.getReceipt(transactionId);
 
     this.log.info(`${fnTag}, proof of the asset lock: ${receipt}`);
 
@@ -44,15 +44,15 @@ export class SatpBridgeManager implements BridgeManager {
   public async unlockAsset(assetId: string): Promise<string> {
     const fnTag = `${this.className}#unlockAsset()`;
 
-    const response = await this.config.network.runTransaction("UnlockAsset", [
-      assetId,
-    ]);
+    const transactionId = (
+      await this.config.network.runTransaction("UnlockAsset", [assetId])
+    ).transactionId;
 
-    let receipt = response.receipt;
-
-    if (receipt == undefined) {
-      receipt = await this.config.network.getReceipt(response.transaction);
+    if (transactionId == undefined) {
+      throw new Error(`${fnTag}, transactionId is undefined`);
     }
+
+    const receipt = await this.config.network.getReceipt(transactionId);
 
     this.log.info(`${fnTag}, proof of the asset unlock: ${receipt}`);
 
@@ -62,15 +62,15 @@ export class SatpBridgeManager implements BridgeManager {
   public async mintAsset(assetId: string): Promise<string> {
     const fnTag = `${this.className}#mintAsset()`;
 
-    const response = await this.config.network.runTransaction("MintAsset", [
-      assetId,
-    ]);
+    const transactionId = (
+      await this.config.network.runTransaction("MintAsset", [assetId])
+    ).transactionId;
 
-    let receipt = response.receipt;
-
-    if (receipt == undefined) {
-      receipt = await this.config.network.getReceipt(response.transaction);
+    if (transactionId == undefined) {
+      throw new Error(`${fnTag}, transactionId is undefined`);
     }
+
+    const receipt = await this.config.network.getReceipt(transactionId);
 
     this.log.info(`${fnTag}, proof of the asset creation: ${receipt}`);
 
@@ -80,15 +80,15 @@ export class SatpBridgeManager implements BridgeManager {
   public async burnAsset(assetId: string): Promise<string> {
     const fnTag = `${this.className}#burnAsset()`;
 
-    const response = await this.config.network.runTransaction("BurnAsset", [
-      assetId,
-    ]);
+    const transactionId = (
+      await this.config.network.runTransaction("BurnAsset", [assetId])
+    ).transactionId;
 
-    let receipt = response.receipt;
-
-    if (receipt == undefined) {
-      receipt = await this.config.network.getReceipt(response.transaction);
+    if (transactionId == undefined) {
+      throw new Error(`${fnTag}, transactionId is undefined`);
     }
+
+    const receipt = await this.config.network.getReceipt(transactionId);
 
     this.log.info(`${fnTag}, proof of the asset deletion: ${receipt}`);
 
@@ -101,16 +101,18 @@ export class SatpBridgeManager implements BridgeManager {
   ): Promise<string> {
     const fnTag = `${this.className}#assignAsset()`;
 
-    const response = await this.config.network.runTransaction("AssignAsset", [
-      assetId,
-      recipient,
-    ]);
+    const transactionId = (
+      await this.config.network.runTransaction("AssignAsset", [
+        assetId,
+        recipient,
+      ])
+    ).transactionId;
 
-    let receipt = response.receipt;
-
-    if (receipt == undefined) {
-      receipt = await this.config.network.getReceipt(response.transaction);
+    if (transactionId == undefined) {
+      throw new Error(`${fnTag}, transactionId is undefined`);
     }
+
+    const receipt = await this.config.network.getReceipt(transactionId);
 
     this.log.info(`${fnTag}, proof of the asset assignment: ${receipt}`);
 
@@ -119,18 +121,20 @@ export class SatpBridgeManager implements BridgeManager {
   public async verifyAssetExistence(
     assetId: string,
   ): Promise<boolean | undefined> {
+    //todo: implement this
     const assetExists = await this.config.network.runTransaction(
       "AssetExists",
       [assetId],
     );
 
-    if (assetExists.transaction == undefined) {
+    if (assetExists == undefined) {
       return false;
     }
 
     return true;
   }
   public async verifyLockAsset(assetId: string): Promise<boolean | undefined> {
+    //todo: implement this
     const lockAsset = await this.config.network.runTransaction("LockAsset", [
       assetId,
     ]);

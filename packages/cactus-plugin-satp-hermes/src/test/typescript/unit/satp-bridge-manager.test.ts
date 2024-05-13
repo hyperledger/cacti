@@ -30,28 +30,7 @@ describe("SATP bridge function testing", () => {
     const bridgeConfig: SATPBridgeConfig = {
       network: {
         runTransaction: jest.fn().mockReturnValue({
-          receipt: "testReceipt",
-          transaction: "testTransaction",
-          output: "testOutput",
-        }),
-        getReceipt: jest.fn().mockReturnValue("testReceipt"),
-        network: "testNetwork",
-        networkName: function (): string {
-          return this.network;
-        },
-      },
-    };
-    const bridgeManager = new SatpBridgeManager(bridgeConfig);
-    const assetId = "testAssetId";
-    const receipt = await bridgeManager.lockAsset(assetId);
-    expect(receipt).toBeDefined();
-  });
-  test("Lock asset function with networks that do not return receipts works", async () => {
-    const bridgeConfig: SATPBridgeConfig = {
-      network: {
-        runTransaction: jest.fn().mockReturnValue({
-          receipt: undefined,
-          transaction: "testTransaction",
+          transactionId: "testTransaction",
           output: "testOutput",
         }),
         getReceipt: jest.fn().mockReturnValue("testReceipt"),
@@ -70,28 +49,7 @@ describe("SATP bridge function testing", () => {
     const bridgeConfig: SATPBridgeConfig = {
       network: {
         runTransaction: jest.fn().mockReturnValue({
-          receipt: "testReceipt",
-          transaction: "testTransaction",
-          output: "testOutput",
-        }),
-        getReceipt: jest.fn().mockReturnValue("testReceipt"),
-        network: "testNetwork",
-        networkName: function (): string {
-          return this.network;
-        },
-      },
-    };
-    const bridgeManager = new SatpBridgeManager(bridgeConfig);
-    const assetId = "testAssetId";
-    const receipt = await bridgeManager.unlockAsset(assetId);
-    expect(receipt).toBeDefined();
-  });
-  test("Unlock asset function with networks that do not return receipts works", async () => {
-    const bridgeConfig: SATPBridgeConfig = {
-      network: {
-        runTransaction: jest.fn().mockReturnValue({
-          receipt: undefined,
-          transaction: "testTransaction",
+          transactionId: "testTransaction",
           output: "testOutput",
         }),
         getReceipt: jest.fn().mockReturnValue("testReceipt"),
@@ -110,28 +68,7 @@ describe("SATP bridge function testing", () => {
     const bridgeConfig: SATPBridgeConfig = {
       network: {
         runTransaction: jest.fn().mockReturnValue({
-          receipt: "testReceipt",
-          transaction: "testTransaction",
-          output: "testOutput",
-        }),
-        getReceipt: jest.fn().mockReturnValue("testReceipt"),
-        network: "testNetwork",
-        networkName: function (): string {
-          return this.network;
-        },
-      },
-    };
-    const bridgeManager = new SatpBridgeManager(bridgeConfig);
-    const assetId = "testAssetId";
-    const receipt = await bridgeManager.mintAsset(assetId);
-    expect(receipt).toBeDefined();
-  });
-  test("Mint asset function works", async () => {
-    const bridgeConfig: SATPBridgeConfig = {
-      network: {
-        runTransaction: jest.fn().mockReturnValue({
-          receipt: undefined,
-          transaction: "testTransaction",
+          transactionId: "testTransaction",
           output: "testOutput",
         }),
         getReceipt: jest.fn().mockReturnValue("testReceipt"),
@@ -150,28 +87,7 @@ describe("SATP bridge function testing", () => {
     const bridgeConfig: SATPBridgeConfig = {
       network: {
         runTransaction: jest.fn().mockReturnValue({
-          receipt: "testReceipt",
-          transaction: "testTransaction",
-          output: "testOutput",
-        }),
-        getReceipt: jest.fn().mockReturnValue("testReceipt"),
-        network: "testNetwork",
-        networkName: function (): string {
-          return this.network;
-        },
-      },
-    };
-    const bridgeManager = new SatpBridgeManager(bridgeConfig);
-    const assetId = "testAssetId";
-    const receipt = await bridgeManager.burnAsset(assetId);
-    expect(receipt).toBeDefined();
-  });
-  test("Burn asset function with networks that do not return receipts works", async () => {
-    const bridgeConfig: SATPBridgeConfig = {
-      network: {
-        runTransaction: jest.fn().mockReturnValue({
-          receipt: undefined,
-          transaction: "testTransaction",
+          transactionId: "testTransaction",
           output: "testOutput",
         }),
         getReceipt: jest.fn().mockReturnValue("testReceipt"),
@@ -190,29 +106,7 @@ describe("SATP bridge function testing", () => {
     const bridgeConfig: SATPBridgeConfig = {
       network: {
         runTransaction: jest.fn().mockReturnValue({
-          receipt: "testReceipt",
-          transaction: "testTransaction",
-          output: "testOutput",
-        }),
-        getReceipt: jest.fn().mockReturnValue("testReceipt"),
-        network: "testNetwork",
-        networkName: function (): string {
-          return this.network;
-        },
-      },
-    };
-    const bridgeManager = new SatpBridgeManager(bridgeConfig);
-    const assetId = "testAssetId";
-    const recipient = "testRecipient";
-    const receipt = await bridgeManager.assignAsset(assetId, recipient);
-    expect(receipt).toBeDefined();
-  });
-  test("Assign asset function with networks that do not return receipts works", async () => {
-    const bridgeConfig: SATPBridgeConfig = {
-      network: {
-        runTransaction: jest.fn().mockReturnValue({
-          receipt: undefined,
-          transaction: "testTransaction",
+          transactionId: "testTransaction",
           output: "testOutput",
         }),
         getReceipt: jest.fn().mockReturnValue("testReceipt"),
@@ -232,8 +126,7 @@ describe("SATP bridge function testing", () => {
     const bridgeConfig: SATPBridgeConfig = {
       network: {
         runTransaction: jest.fn().mockReturnValue({
-          receipt: "testReceipt",
-          transaction: "testTransaction",
+          transactionId: "testTransaction",
           output: "testOutput",
         }),
         getReceipt: jest.fn().mockReturnValue("testReceipt"),
@@ -252,8 +145,7 @@ describe("SATP bridge function testing", () => {
     const bridgeConfig: SATPBridgeConfig = {
       network: {
         runTransaction: jest.fn().mockReturnValue({
-          receipt: "testReceipt",
-          transaction: "testTransaction",
+          transactionId: "testTransaction",
           output: "testOutput",
         }),
         getReceipt: jest.fn().mockReturnValue("testReceipt"),

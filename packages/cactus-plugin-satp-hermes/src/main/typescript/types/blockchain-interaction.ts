@@ -8,6 +8,7 @@ import {
   IPluginLedgerConnectorBesuOptions,
   Web3SigningCredential,
 } from "@hyperledger/cactus-plugin-ledger-connector-besu";
+import { IPluginBungeeHermesOptions } from "@hyperledger/cactus-plugin-bungee-hermes";
 
 // inject gateway, get connectors
 export type SATPLedgerConnector = string;
@@ -19,6 +20,7 @@ export interface FabricConfig {
   channelName: string;
   contractName: string;
   options: IPluginLedgerConnectorFabricOptions;
+  bungeeOptions: IPluginBungeeHermesOptions;
 }
 export interface BesuConfig {
   keychainId: string;
@@ -26,10 +28,10 @@ export interface BesuConfig {
   contractName: string;
   contractAddress: string;
   options: IPluginLedgerConnectorBesuOptions;
+  bungeeOptions: IPluginBungeeHermesOptions;
 }
 
 export interface TransactionResponse {
-  transaction: string;
-  receipt: string | undefined;
+  transactionId: string;
   output: string;
 }

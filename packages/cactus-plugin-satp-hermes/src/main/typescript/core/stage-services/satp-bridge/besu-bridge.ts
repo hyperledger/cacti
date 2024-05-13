@@ -8,11 +8,14 @@ import {
   PluginLedgerConnectorBesu,
 } from "@hyperledger/cactus-plugin-ledger-connector-besu";
 import { NetworkBridge } from "./network-bridge";
+import { PluginBungeeHermes } from "@hyperledger/cactus-plugin-bungee-hermes/src/main/typescript/plugin-bungee-hermes";
+import { StrategyBesu } from "@hyperledger/cactus-plugin-bungee-hermes/src/main/typescript/strategy/strategy-besu";
 
 export class BesuBridge implements NetworkBridge {
-  network: string = "besu";
+  network: string = "BESU";
 
   connector: PluginLedgerConnectorBesu;
+  bungee: PluginBungeeHermes;
   options: IPluginLedgerConnectorBesuOptions;
   config: BesuConfig;
 
@@ -20,6 +23,8 @@ export class BesuBridge implements NetworkBridge {
     this.config = besuConfig;
     this.options = besuConfig.options;
     this.connector = new PluginLedgerConnectorBesu(besuConfig.options);
+    this.bungee = new PluginBungeeHermes(besuConfig.bungeeOptions);
+    this.bungee.addStrategy(this.network, new StrategyBesu("INFO"));
   }
   public networkName(): string {
     return this.network;
@@ -37,19 +42,40 @@ export class BesuBridge implements NetworkBridge {
       signingCredential: this.config.signingCredential,
     });
     return {
-      transaction: response.transactionReceipt?.transactionHash ?? "",
-      receipt: JSON.stringify(response.transactionReceipt),
-      output: JSON.stringify(response),
+      transactionId: response.transactionReceipt?.transactionHash ?? "",
+      output: response.callOutput.toString(),
     };
   }
-  public async getReceipt(transactionId: string): Promise<string> {
-    const response = await this.connector.invokeContract({
-      contractName: this.config.contractName,
-      invocationType: EthContractInvocationType.Call,
-      methodName: "GetBlockByTxID",
-      params: [transactionId],
+
+  public async getReceipt(transactionHash: string): Promise<string> {
+    const networkDetails = {
+      connectorApiPath: "", //todo check this to not use api
       signingCredential: this.config.signingCredential,
-    });
-    return response.callOutput;
+      contractName: this.config.contractName,
+      contractAddress: this.config.contractAddress,
+      keychainId: this.config.keychainId,
+      participant: "Org1MSP",
+    };
+
+    const snapshot = await this.bungee.generateSnapshot(
+      [],
+      this.network,
+      networkDetails,
+    );
+
+    const view = this.bungee.generateView(
+      snapshot,
+      "0",
+      Number.MAX_SAFE_INTEGER.toString(),
+      undefined,
+    );
+
+    // process view
+
+    if (view.view == undefined) {
+      throw new Error("View is undefined");
+    }
+
+    return view.view.getViewStr();
   }
 }
