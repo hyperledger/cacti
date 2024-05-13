@@ -146,8 +146,12 @@ describe("PluginKeychainAwsSm", () => {
       await apiClient.setKeychainEntryV1({
         value,
       } as any as SetKeychainEntryRequestV1);
-    } catch (e) {
-      expect(e.response.status).toBe(400);
+    } catch (e: any) {
+      t2.equal(
+        e.response.status,
+        400,
+        `Endpoint ${fSet} without required key: response.status === 400 OK`,
+      );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
       );
@@ -160,8 +164,12 @@ describe("PluginKeychainAwsSm", () => {
       await apiClient.getKeychainEntryV1(
         {} as any as GetKeychainEntryRequestV1,
       );
-    } catch (e) {
-      expect(e.response.status).toBe(400);
+    } catch (e: any) {
+      t2.equal(
+        e.response.status,
+        400,
+        `Endpoint ${fGet} without required key: response.status === 400 OK`,
+      );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
       );
@@ -174,8 +182,12 @@ describe("PluginKeychainAwsSm", () => {
       await apiClient.hasKeychainEntryV1(
         {} as any as HasKeychainEntryRequestV1,
       );
-    } catch (e) {
-      expect(e.response.status).toBe(400);
+    } catch (e: any) {
+      t2.equal(
+        e.response.status,
+        400,
+        `Endpoint ${fHas} without required key: response.status === 400 OK`,
+      );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
       );
@@ -188,8 +200,12 @@ describe("PluginKeychainAwsSm", () => {
       await apiClient.deleteKeychainEntryV1(
         {} as any as DeleteKeychainEntryRequestV1,
       );
-    } catch (e) {
-      expect(e.response.status).toBe(400);
+    } catch (e: any) {
+      t2.equal(
+        e.response.status,
+        400,
+        `Endpoint ${fDelete} without required key: response.status === 400 OK`,
+      );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
       );
@@ -204,8 +220,12 @@ describe("PluginKeychainAwsSm", () => {
         value,
         fake: 4,
       } as any as SetKeychainEntryRequestV1);
-    } catch (e) {
-      expect(e.response.status).toBe(400);
+    } catch (e: any) {
+      t2.equal(
+        e.response.status,
+        400,
+        `Endpoint ${fSet} with fake=4: response.status === 400 OK`,
+      );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
       );
@@ -219,8 +239,12 @@ describe("PluginKeychainAwsSm", () => {
         key,
         fake: 4,
       } as any as GetKeychainEntryRequestV1);
-    } catch (e) {
-      expect(e.response.status).toBe(400);
+    } catch (e: any) {
+      t2.equal(
+        e.response.status,
+        400,
+        `Endpoint ${fGet} with fake=4: response.status === 400 OK`,
+      );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
       );
@@ -234,8 +258,12 @@ describe("PluginKeychainAwsSm", () => {
         key,
         fake: 4,
       } as any as HasKeychainEntryRequestV1);
-    } catch (e) {
-      expect(e.response.status).toBe(400);
+    } catch (e: any) {
+      t2.equal(
+        e.response.status,
+        400,
+        `Endpoint ${fHas} with fake=4: response.status === 400 OK`,
+      );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
       );
@@ -249,8 +277,12 @@ describe("PluginKeychainAwsSm", () => {
         key,
         fake: 4,
       } as any as DeleteKeychainEntryRequestV1);
-    } catch (e) {
-      expect(e.response.status).toBe(400);
+    } catch (e: any) {
+      t2.equal(
+        e.response.status,
+        400,
+        `Endpoint ${fDelete} with fake=4: response.status === 400 OK`,
+      );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
       );
