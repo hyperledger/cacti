@@ -9,12 +9,13 @@ import "@hyperledger/cactus-plugin-bungee-hermes/src/test/typescript/solidity/lo
 
 
 contract SATPContract is Ownable, ERC20, ITraceableContract{
+ 
     address public bridge_address;
 
     mapping (string => uint256) public balanceOf;
 
     constructor(address _bridge_address) ERC20("SATPToken", "SATP")  Ownable(_bridge_address){
-        bridge_address = _bridge_address;
+        bridge_address = address(_bridge_address);
     }
 
     function mint(uint256 amount) external onlyOwner {
