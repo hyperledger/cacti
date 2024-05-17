@@ -12,5 +12,8 @@ export abstract class NetworkBridge {
     params: string[],
   ): Promise<TransactionResponse>;
 
-  public abstract getReceipt(transactionId: string): Promise<string>;
+  public abstract getReceipt(
+    assetId: string,
+    transactionId: string,
+  ): Promise<string>;
 }

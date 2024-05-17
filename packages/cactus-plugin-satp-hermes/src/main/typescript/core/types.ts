@@ -21,7 +21,6 @@ export type SATPServiceClient =
   | typeof SatpStage1Service
   | typeof SatpStage2Service
   | typeof SatpStage3Service;
-import { TransactionResponse } from "../types/blockchain-interaction";
 import { LogLevelDesc } from "@hyperledger/cactus-common";
 import { NetworkBridge } from "./stage-services/satp-bridge/network-bridge";
 

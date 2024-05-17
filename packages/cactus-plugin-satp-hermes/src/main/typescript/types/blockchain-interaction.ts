@@ -1,10 +1,12 @@
 // TODO: define alias types for SATPLedgerConnector, which encapsulates IPluginLedgerConnector
 
 import {
+  DefaultApi as FabricApi,
   FabricSigningCredential,
   IPluginLedgerConnectorFabricOptions,
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
 import {
+  DefaultApi as BesuApi,
   IPluginLedgerConnectorBesuOptions,
   Web3SigningCredential,
 } from "@hyperledger/cactus-plugin-ledger-connector-besu";
@@ -21,6 +23,8 @@ export interface FabricConfig {
   contractName: string;
   options: IPluginLedgerConnectorFabricOptions;
   bungeeOptions: IPluginBungeeHermesOptions;
+  api: FabricApi;
+  apiPath: string;
 }
 export interface BesuConfig {
   keychainId: string;
@@ -29,6 +33,8 @@ export interface BesuConfig {
   contractAddress: string;
   options: IPluginLedgerConnectorBesuOptions;
   bungeeOptions: IPluginBungeeHermesOptions;
+  api: BesuApi;
+  apiPath: string;
 }
 
 export interface TransactionResponse {
