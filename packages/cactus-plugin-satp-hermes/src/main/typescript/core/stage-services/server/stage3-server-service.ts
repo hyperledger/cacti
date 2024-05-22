@@ -463,19 +463,19 @@
 //       throw new Error(`${fnTag}, sequenceNumber does not match`);
 //     }
 
-if (
-  getMessageHash(sessionData, MessageType.COMMIT_FINAL) !=
-  request.common.hashPreviousMessage
-) {
-  throw new Error(`${fnTag}, hashPreviousMessage does not match`);
-}
+// if (
+//   getMessageHash(sessionData, MessageType.COMMIT_FINAL) !=
+//   request.common.hashPreviousMessage
+// ) {
+//   throw new Error(`${fnTag}, hashPreviousMessage does not match`);
+// }
 
-if (
-  getMessageHash(sessionData, MessageType.TRANSFER_COMMENCE_REQUEST) !=
-  request.hashTransferCommence
-) {
-  throw new Error(`${fnTag}, hashTransferCommence does not match`);
-}
+// if (
+//   getMessageHash(sessionData, MessageType.TRANSFER_COMMENCE_REQUEST) !=
+//   request.hashTransferCommence
+// ) {
+//   throw new Error(`${fnTag}, hashTransferCommence does not match`);
+// }
 
 //     if (sessionData.clientGatewayPubkey != request.common.clientGatewayPubkey) {
 //       throw new Error(`${fnTag}, clientGatewayPubkey does not match`);

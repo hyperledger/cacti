@@ -34,7 +34,10 @@ export class SatpBridgeManager implements BridgeManager {
       throw new Error(`${fnTag}, transactionId is undefined`);
     }
 
-    const receipt = await this.config.network.getReceipt(transactionId);
+    const receipt = await this.config.network.getReceipt(
+      assetId,
+      transactionId,
+    );
 
     this.log.info(`${fnTag}, proof of the asset lock: ${receipt}`);
 
@@ -52,7 +55,10 @@ export class SatpBridgeManager implements BridgeManager {
       throw new Error(`${fnTag}, transactionId is undefined`);
     }
 
-    const receipt = await this.config.network.getReceipt(transactionId);
+    const receipt = await this.config.network.getReceipt(
+      assetId,
+      transactionId,
+    );
 
     this.log.info(`${fnTag}, proof of the asset unlock: ${receipt}`);
 
@@ -70,7 +76,10 @@ export class SatpBridgeManager implements BridgeManager {
       throw new Error(`${fnTag}, transactionId is undefined`);
     }
 
-    const receipt = await this.config.network.getReceipt(transactionId);
+    const receipt = await this.config.network.getReceipt(
+      assetId,
+      transactionId,
+    );
 
     this.log.info(`${fnTag}, proof of the asset creation: ${receipt}`);
 
@@ -88,7 +97,10 @@ export class SatpBridgeManager implements BridgeManager {
       throw new Error(`${fnTag}, transactionId is undefined`);
     }
 
-    const receipt = await this.config.network.getReceipt(transactionId);
+    const receipt = await this.config.network.getReceipt(
+      assetId,
+      transactionId,
+    );
 
     this.log.info(`${fnTag}, proof of the asset deletion: ${receipt}`);
 
@@ -112,7 +124,10 @@ export class SatpBridgeManager implements BridgeManager {
       throw new Error(`${fnTag}, transactionId is undefined`);
     }
 
-    const receipt = await this.config.network.getReceipt(transactionId);
+    const receipt = await this.config.network.getReceipt(
+      assetId,
+      transactionId,
+    );
 
     this.log.info(`${fnTag}, proof of the asset assignment: ${receipt}`);
 

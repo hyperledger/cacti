@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // import {
 //   JsObjectSigner,
 //   Logger,
@@ -32,40 +31,6 @@
 // } from "../../../types/satp-protocol";
 // import { SATPSession } from "../../satp-session";
 // import { LockAssertionReceiptMessage } from "../../../generated/proto/cacti/satp/v02/stage_2_pb";
-=======
-import {
-  JsObjectSigner,
-  Logger,
-  LoggerProvider,
-} from "@hyperledger/cactus-common";
-import { SATPGateway } from "../../../plugin-satp-hermes-gateway";
-import {
-  CommonSatp,
-  MessageType,
-} from "../../../generated/proto/cacti/satp/v02/common/message_pb";
-import { SATP_VERSION } from "../../constants";
-import {
-  CommitFinalAcknowledgementReceiptResponseMessage,
-  CommitFinalAssertionRequestMessage,
-  CommitPreparationRequestMessage,
-  CommitReadyResponseMessage,
-  TransferCompleteRequestMessage,
-} from "../../../generated/proto/cacti/satp/v02/stage_3_pb";
-import {
-  bufArray2HexStr,
-  getHash,
-  sign,
-  verifySignature,
-} from "../../../gateway-utils";
-import { getMessageHash, saveHash, saveSignature } from "../../session-utils";
-import {
-  SATPService,
-  ISATPClientServiceOptions,
-  SATPServiceType,
-} from "../../../types/satp-protocol";
-import { SATPSession } from "../../satp-session";
-import { LockAssertionReceiptMessage } from "../../../generated/proto/cacti/satp/v02/stage_2_pb";
->>>>>>> a6ea863fd (feat(satp-hermes): new session data architeture)
 
 // export class Stage3ClientService implements SATPService {
 //   public static readonly CLASS_NAME = "client-service";
@@ -136,19 +101,19 @@ import { LockAssertionReceiptMessage } from "../../../generated/proto/cacti/satp
 
 //     sessionData.lastSequenceNumber = commonBody.sequenceNumber;
 
-    const commitPreparationRequestMessage =
-      new CommitPreparationRequestMessage();
-    commitPreparationRequestMessage.common = commonBody;
+// const commitPreparationRequestMessage =
+//   new CommitPreparationRequestMessage();
+// commitPreparationRequestMessage.common = commonBody;
 
-    // if (sessionData.transferContextId != undefined) {
-    //   commitPreparationRequestMessage.common.transferContextId =
-    //     sessionData.transferContextId;
-    // }
+// if (sessionData.transferContextId != undefined) {
+//   commitPreparationRequestMessage.common.transferContextId =
+//     sessionData.transferContextId;
+// }
 
-    // if (sessionData.clientTransferNumber != undefined) {
-    //   commitPreparationRequestMessage.clientTransferNumber =
-    //     sessionData.clientTransferNumber;
-    // }
+// if (sessionData.clientTransferNumber != undefined) {
+//   commitPreparationRequestMessage.clientTransferNumber =
+//     sessionData.clientTransferNumber;
+// }
 
 //     const messageSignature = bufArray2HexStr(
 //       sign(this.signer, JSON.stringify(commitPreparationRequestMessage)),
@@ -218,23 +183,23 @@ import { LockAssertionReceiptMessage } from "../../../generated/proto/cacti/satp
 //       new CommitFinalAssertionRequestMessage();
 //     commitFinalAssertionRequestMessage.common = commonBody;
 
-    // commitFinalAssertionRequestMessage.burnAssertionClaim =
-    //   sessionData.burnAssertionClaim;
+// commitFinalAssertionRequestMessage.burnAssertionClaim =
+//   sessionData.burnAssertionClaim;
 
-    // if (sessionData.burnAssertionClaimFormat != undefined) {
-    //   commitFinalAssertionRequestMessage.burnAssertionClaimFormat =
-    //     sessionData.burnAssertionClaimFormat;
-    // }
+// if (sessionData.burnAssertionClaimFormat != undefined) {
+//   commitFinalAssertionRequestMessage.burnAssertionClaimFormat =
+//     sessionData.burnAssertionClaimFormat;
+// }
 
-    // if (sessionData.transferContextId != undefined) {
-    //   commitFinalAssertionRequestMessage.common.transferContextId =
-    //     sessionData.transferContextId;
-    // }
+// if (sessionData.transferContextId != undefined) {
+//   commitFinalAssertionRequestMessage.common.transferContextId =
+//     sessionData.transferContextId;
+// }
 
-    // if (sessionData.clientTransferNumber != undefined) {
-    //   commitFinalAssertionRequestMessage.clientTransferNumber =
-    //     sessionData.clientTransferNumber;
-    // }
+// if (sessionData.clientTransferNumber != undefined) {
+//   commitFinalAssertionRequestMessage.clientTransferNumber =
+//     sessionData.clientTransferNumber;
+// }
 
 //     const messageSignature = bufArray2HexStr(
 //       sign(this.signer, JSON.stringify(commitFinalAssertionRequestMessage)),
@@ -299,18 +264,18 @@ import { LockAssertionReceiptMessage } from "../../../generated/proto/cacti/satp
 
 //     sessionData.lastSequenceNumber = commonBody.sequenceNumber;
 
-    // const transferCompleteRequestMessage = new TransferCompleteRequestMessage();
-    // transferCompleteRequestMessage.common = commonBody;
+// const transferCompleteRequestMessage = new TransferCompleteRequestMessage();
+// transferCompleteRequestMessage.common = commonBody;
 
-    // if (sessionData.transferContextId != undefined) {
-    //   transferCompleteRequestMessage.common.transferContextId =
-    //     sessionData.transferContextId;
-    // }
+// if (sessionData.transferContextId != undefined) {
+//   transferCompleteRequestMessage.common.transferContextId =
+//     sessionData.transferContextId;
+// }
 
-    // if (sessionData.clientTransferNumber != undefined) {
-    //   transferCompleteRequestMessage.clientTransferNumber =
-    //     sessionData.clientTransferNumber;
-    // }
+// if (sessionData.clientTransferNumber != undefined) {
+//   transferCompleteRequestMessage.clientTransferNumber =
+//     sessionData.clientTransferNumber;
+// }
 
 //     transferCompleteRequestMessage.hashTransferCommence = getMessageHash(
 //       sessionData,
@@ -410,49 +375,49 @@ import { LockAssertionReceiptMessage } from "../../../generated/proto/cacti/satp
 //       throw new Error(`${fnTag}, serverGatewayPubkey does not match`);
 //     }
 
-    // if (
-    //   !verifySignature(
-    //     this.signer,
-    //     response.common,
-    //     response.common.serverGatewayPubkey,
-    //   )
-    // ) {
-    //   throw new Error(`${fnTag}, message signature verification failed`);
-    // }
+// if (
+//   !verifySignature(
+//     this.signer,
+//     response.common,
+//     response.common.serverGatewayPubkey,
+//   )
+// ) {
+//   throw new Error(`${fnTag}, message signature verification failed`);
+// }
 
-    // if (
-    //   sessionData.transferContextId != undefined &&
-    //   response.common.transferContextId != sessionData.transferContextId
-    // ) {
-    //   throw new Error(`${fnTag}, transferContextId does not match`);
-    // }
+// if (
+//   sessionData.transferContextId != undefined &&
+//   response.common.transferContextId != sessionData.transferContextId
+// ) {
+//   throw new Error(`${fnTag}, transferContextId does not match`);
+// }
 
-    // if (
-    //   sessionData.serverTransferNumber != undefined &&
-    //   response.serverTransferNumber != sessionData.serverTransferNumber
-    // ) {
-    //   // This does not throw an error because the serverTransferNumber is only meaningful to the server.
-    //   this.log.info(
-    //     `${fnTag}, serverTransferNumber does not match the one that was sent`,
-    //   );
-    // }
+// if (
+//   sessionData.serverTransferNumber != undefined &&
+//   response.serverTransferNumber != sessionData.serverTransferNumber
+// ) {
+//   // This does not throw an error because the serverTransferNumber is only meaningful to the server.
+//   this.log.info(
+//     `${fnTag}, serverTransferNumber does not match the one that was sent`,
+//   );
+// }
 
-    // if (
-    //   sessionData.transferContextId != undefined &&
-    //   response.common.transferContextId != sessionData.transferContextId
-    // ) {
-    //   throw new Error(`${fnTag}, transferContextId does not match`);
-    // }
+// if (
+//   sessionData.transferContextId != undefined &&
+//   response.common.transferContextId != sessionData.transferContextId
+// ) {
+//   throw new Error(`${fnTag}, transferContextId does not match`);
+// }
 
-    // if (
-    //   sessionData.serverTransferNumber != undefined &&
-    //   response.serverTransferNumber != sessionData.serverTransferNumber
-    // ) {
-    //   // This does not throw an error because the serverTransferNumber is only meaningful to the server.
-    //   this.log.info(
-    //     `${fnTag}, serverTransferNumber does not match the one that was sent`,
-    //   );
-    // }
+// if (
+//   sessionData.serverTransferNumber != undefined &&
+//   response.serverTransferNumber != sessionData.serverTransferNumber
+// ) {
+//   // This does not throw an error because the serverTransferNumber is only meaningful to the server.
+//   this.log.info(
+//     `${fnTag}, serverTransferNumber does not match the one that was sent`,
+//   );
+// }
 
 //     this.log.info(`LockAssertionReceiptMessage passed all checks.`);
 //   }
@@ -518,48 +483,48 @@ import { LockAssertionReceiptMessage } from "../../../generated/proto/cacti/satp
 //       throw new Error(`${fnTag}, serverGatewayPubkey does not match`);
 //     }
 
-    // if (
-    //   !verifySignature(
-    //     this.signer,
-    //     response.common,
-    //     response.common.serverGatewayPubkey,
-    //   )
-    // ) {
-    //   throw new Error(`${fnTag}, message signature verification failed`);
-    // }
+// if (
+//   !verifySignature(
+//     this.signer,
+//     response.common,
+//     response.common.serverGatewayPubkey,
+//   )
+// ) {
+//   throw new Error(`${fnTag}, message signature verification failed`);
+// }
 
-    // if (response.mintAssertionClaimsFormat != undefined) {
-    //   //todo
-    //   this.log.info(
-    //     `${fnTag},  Optional variable loaded: mintAssertionClaimsFormat `,
-    //   );
-    //   sessionData.mintAssertionClaimsFormat =
-    //     response.mintAssertionClaimsFormat;
-    // }
+// if (response.mintAssertionClaimsFormat != undefined) {
+//   //todo
+//   this.log.info(
+//     `${fnTag},  Optional variable loaded: mintAssertionClaimsFormat `,
+//   );
+//   sessionData.mintAssertionClaimsFormat =
+//     response.mintAssertionClaimsFormat;
+// }
 
-    // if (response.mintAssertionClaims == undefined) {
-    //   //todo
-    //   throw new Error(`${fnTag}, mintAssertionClaims is missing`);
-    // }
+// if (response.mintAssertionClaims == undefined) {
+//   //todo
+//   throw new Error(`${fnTag}, mintAssertionClaims is missing`);
+// }
 
-    // sessionData.mintAssertionClaims = response.mintAssertionClaims;
+// sessionData.mintAssertionClaims = response.mintAssertionClaims;
 
-    // if (
-    //   sessionData.transferContextId != undefined &&
-    //   response.common.transferContextId != sessionData.transferContextId
-    // ) {
-    //   throw new Error(`${fnTag}, transferContextId does not match`);
-    // }
+// if (
+//   sessionData.transferContextId != undefined &&
+//   response.common.transferContextId != sessionData.transferContextId
+// ) {
+//   throw new Error(`${fnTag}, transferContextId does not match`);
+// }
 
-    // if (
-    //   sessionData.serverTransferNumber != undefined &&
-    //   response.serverTransferNumber != sessionData.serverTransferNumber
-    // ) {
-    //   // This does not throw an error because the serverTransferNumber is only meaningful to the server.
-    //   this.log.info(
-    //     `${fnTag}, serverTransferNumber does not match the one that was sent`,
-    //   );
-    // }
+// if (
+//   sessionData.serverTransferNumber != undefined &&
+//   response.serverTransferNumber != sessionData.serverTransferNumber
+// ) {
+//   // This does not throw an error because the serverTransferNumber is only meaningful to the server.
+//   this.log.info(
+//     `${fnTag}, serverTransferNumber does not match the one that was sent`,
+//   );
+// }
 
 //     this.log.info(`CommitReadyResponseMessage passed all checks.`);
 //   }
@@ -625,55 +590,55 @@ import { LockAssertionReceiptMessage } from "../../../generated/proto/cacti/satp
 //       throw new Error(`${fnTag}, serverGatewayPubkey does not match`);
 //     }
 
-    // if (
-    //   !verifySignature(
-    //     this.signer,
-    //     response.common,
-    //     response.common.serverGatewayPubkey,
-    //   )
-    // ) {
-    //   throw new Error(`${fnTag}, message signature verification failed`);
-    // }
+// if (
+//   !verifySignature(
+//     this.signer,
+//     response.common,
+//     response.common.serverGatewayPubkey,
+//   )
+// ) {
+//   throw new Error(`${fnTag}, message signature verification failed`);
+// }
 
-    // if (response.mintAssertionClaimsFormat != undefined) {
-    //   //todo
-    //   this.log.info(
-    //     `${fnTag},  Optional variable loaded: mintAssertionClaimsFormat `,
-    //   );
-    //   sessionData.mintAssertionClaimsFormat =
-    //     response.mintAssertionClaimsFormat;
-    // }
+// if (response.mintAssertionClaimsFormat != undefined) {
+//   //todo
+//   this.log.info(
+//     `${fnTag},  Optional variable loaded: mintAssertionClaimsFormat `,
+//   );
+//   sessionData.mintAssertionClaimsFormat =
+//     response.mintAssertionClaimsFormat;
+// }
 
-    // if (
-    //   sessionData.transferContextId != undefined &&
-    //   response.common.transferContextId != sessionData.transferContextId
-    // ) {
-    //   throw new Error(`${fnTag}, transferContextId does not match`);
-    // }
+// if (
+//   sessionData.transferContextId != undefined &&
+//   response.common.transferContextId != sessionData.transferContextId
+// ) {
+//   throw new Error(`${fnTag}, transferContextId does not match`);
+// }
 
-    // if (response.assignmentAssertionClaim == undefined) {
-    //   throw new Error(`${fnTag}, assignmentAssertionClaim is missing`);
-    // }
+// if (response.assignmentAssertionClaim == undefined) {
+//   throw new Error(`${fnTag}, assignmentAssertionClaim is missing`);
+// }
 
-    // sessionData.assignmentAssertionClaim = response.assignmentAssertionClaim;
+// sessionData.assignmentAssertionClaim = response.assignmentAssertionClaim;
 
-    // if (response.assignmentAssertionClaimFormat != undefined) {
-    //   this.log.info(
-    //     `${fnTag},  Optional variable loaded: assignmentAssertionClaimFormat `,
-    //   );
-    //   sessionData.assignmentAssertionClaimFormat =
-    //     response.assignmentAssertionClaimFormat;
-    // }
+// if (response.assignmentAssertionClaimFormat != undefined) {
+//   this.log.info(
+//     `${fnTag},  Optional variable loaded: assignmentAssertionClaimFormat `,
+//   );
+//   sessionData.assignmentAssertionClaimFormat =
+//     response.assignmentAssertionClaimFormat;
+// }
 
-    // if (
-    //   sessionData.serverTransferNumber != undefined &&
-    //   response.serverTransferNumber != sessionData.serverTransferNumber
-    // ) {
-    //   // This does not throw an error because the serverTransferNumber is only meaningful to the server.
-    //   this.log.info(
-    //     `${fnTag}, serverTransferNumber does not match the one that was sent`,
-    //   );
-    // }
+// if (
+//   sessionData.serverTransferNumber != undefined &&
+//   response.serverTransferNumber != sessionData.serverTransferNumber
+// ) {
+//   // This does not throw an error because the serverTransferNumber is only meaningful to the server.
+//   this.log.info(
+//     `${fnTag}, serverTransferNumber does not match the one that was sent`,
+//   );
+// }
 
 //     this.log.info(
 //       `CommitFinalAcknowledgementReceiptResponseMessage passed all checks.`,

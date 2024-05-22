@@ -353,17 +353,17 @@ export class Stage1ServerService extends SATPService {
     );
 
     if (request.networkCapabilities.permissions != undefined) {
-      this.log.info(`${fnTag}, Optional variable loaded: permissions...`);
+      this.Log.info(`${fnTag}, Optional variable loaded: permissions...`);
       sessionData.permissions = request.networkCapabilities.permissions;
     }
 
     if (request.networkCapabilities.developerUrn != undefined) {
-      this.log.info(`${fnTag}, Optional variable loaded: developerUrn...`);
+      this.Log.info(`${fnTag}, Optional variable loaded: developerUrn...`);
       sessionData.developerUrn = request.networkCapabilities.developerUrn;
     }
 
     if (request.networkCapabilities.applicationProfile != undefined) {
-      this.log.info(
+      this.Log.info(
         `${fnTag}, Optional variable loaded: applicationProfile...`,
       );
       sessionData.applicationProfile =
@@ -371,37 +371,37 @@ export class Stage1ServerService extends SATPService {
     }
 
     if (request.networkCapabilities.subsequentCalls != undefined) {
-      this.log.info(`${fnTag}, Optional variable loaded: subsequentCalls...`);
+      this.Log.info(`${fnTag}, Optional variable loaded: subsequentCalls...`);
       sessionData.subsequentCalls = request.networkCapabilities.subsequentCalls;
     }
 
     if (request.networkCapabilities.history != undefined) {
-      this.log.info(`${fnTag}, Optional variable loaded: history...`);
+      this.Log.info(`${fnTag}, Optional variable loaded: history...`);
       sessionData.history = request.networkCapabilities.history;
     }
 
     if (request.transferInitClaimsFormat != undefined) {
-      this.log.info(
+      this.Log.info(
         `${fnTag}, Optional variable loaded: transferInitClaimsFormat...`,
       );
       sessionData.transferClaimsFormat = request.transferInitClaimsFormat;
     }
 
     if (request.multipleCancelsAllowed != undefined) {
-      this.log.info(
+      this.Log.info(
         `${fnTag}, Optional variable loaded: multipleCancelsAllowed...`,
       );
       sessionData.multipleCancelsAllowed = request.multipleCancelsAllowed;
     }
 
     if (request.multipleClaimsAllowed != undefined) {
-      this.log.info(
+      this.Log.info(
         `${fnTag}, Optional variable loaded: multipleClaimsAllowed...`,
       );
       sessionData.multipleClaimsAllowed = request.multipleClaimsAllowed;
     }
 
-    this.log.info(`Session data created for session id ${sessionData.id}`);
+    this.Log.info(`Session data created for session id ${sessionData.id}`);
     if (!this.checkTransferClaims(request.transferInitClaims)) {
       throw new Error();
     }
@@ -534,13 +534,13 @@ export class Stage1ServerService extends SATPService {
     }
 
     if (request.clientTransferNumber != undefined) {
-      this.log.info(
+      this.Log.info(
         `${fnTag}, Optional variable loaded: clientTransferNumber...`,
       );
       sessionData.clientTransferNumber = request.clientTransferNumber;
     }
 
-    this.log.info(`TransferCommenceRequest passed all checks.`);
+    this.Log.info(`TransferCommenceRequest passed all checks.`);
     return sessionData;
   }
 

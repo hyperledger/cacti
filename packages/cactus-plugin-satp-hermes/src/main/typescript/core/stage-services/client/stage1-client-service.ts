@@ -30,6 +30,7 @@ import {
   ISATPClientServiceOptions,
   ISATPServiceOptions,
 } from "../satp-service";
+import { ACCEPTANCE } from "../../../generated/proto/cacti/satp/v02/common/session_pb";
 
 export class Stage1ClientService extends SATPService {
   public static readonly SATP_STAGE = "1";

@@ -59,13 +59,13 @@ export class SATPContract
 
   @Transaction()
   public async mint(ctx: Context, amount: number): Promise<boolean> {
-    await super.mint(ctx, amount);
+    await super.Mint(ctx, amount);
     return true;
   }
 
   @Transaction()
   public async burn(ctx: Context, amount: number): Promise<boolean> {
-    await super.burn(ctx, amount);
+    await super.Burn(ctx, amount);
     return true;
   }
 
