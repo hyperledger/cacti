@@ -6,684 +6,392 @@
 
 "use strict";
 
-const { Contract } = require("fabric-contract-api");
-const CryptoMaterial = require("../crypto-material/crypto-material.json");
+const { Context } = require("fabric-contract-api");
+const { ChaincodeStub, ClientIdentity } = require("fabric-shim");
 
-const accounts = [
-  {
-    fabric: CryptoMaterial.accounts.userA.fabricID,
-    ethereum: CryptoMaterial.accounts.userA.ethAddress,
-  },
-  {
-    fabric: CryptoMaterial.accounts.userB.fabricID,
-    ethereum: CryptoMaterial.accounts.userB.ethAddress,
-  },
-  {
-    fabric: CryptoMaterial.accounts.bridge.fabricID,
-    ethereum: CryptoMaterial.accounts.bridge.ethAddress,
-  },
-];
+const { TokenERC20Contract } = require("..");
 
-const FABRIC_BRIDGE_IDENTITY = CryptoMaterial.accounts.bridge.fabricID;
+const chai = require("chai");
+const chaiAsPromised = require("chai-as-promised");
+const sinon = require("sinon");
+const expect = chai.expect;
 
-// Define objectType names for prefix
-const balancePrefix = "balance";
-const allowancePrefix = "allowance";
-const addressPrefix = "address";
+chai.should();
+chai.use(chaiAsPromised);
 
-// Define key names for options
-const nameKey = "name";
-const symbolKey = "symbol";
-const decimalsKey = "decimals";
-const totalSupplyKey = "totalSupply";
+describe("Chaincode", () => {
+  let sandbox;
+  let token;
+  let ctx;
+  let mockStub;
+  let mockClientIdentity;
 
-class TokenERC20Contract extends Contract {
-  /**
-   * Return the name of the token - e.g. "MyToken".
-   * The original function name is `name` in ERC20 specification.
-   * However, 'name' conflicts with a parameter `name` in `Contract` class.
-   * As a work around, we use `TokenName` as an alternative function name.
-   *
-   * @param {Context} ctx the transaction context
-   * @returns {String} Returns the name of the token
-   */
-  async TokenName(ctx) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
+  beforeEach("Sandbox creation", async () => {
+    sandbox = sinon.createSandbox();
+    token = new TokenERC20Contract("token-erc20");
 
-    const nameBytes = await ctx.stub.getState(nameKey);
+    ctx = sinon.createStubInstance(Context);
+    mockStub = sinon.createStubInstance(ChaincodeStub);
+    ctx.stub = mockStub;
+    mockClientIdentity = sinon.createStubInstance(ClientIdentity);
+    ctx.clientIdentity = mockClientIdentity;
 
-    return nameBytes.toString();
-  }
+    await token.Initialize(ctx, "some name", "some symbol", "2");
 
-  /**
-   * Return the symbol of the token. E.g. “HIX”.
-   *
-   * @param {Context} ctx the transaction context
-   * @returns {String} Returns the symbol of the token
-   */
-  async Symbol(ctx) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
+    mockStub.putState.resolves("some state");
+    mockStub.setEvent.returns("set event");
+  });
 
-    const symbolBytes = await ctx.stub.getState(symbolKey);
-    return symbolBytes.toString();
-  }
+  afterEach("Sandbox restoration", () => {
+    sandbox.restore();
+  });
 
-  /**
-   * Return the number of decimals the token uses
-   * e.g. 8, means to divide the token amount by 100000000 to get its user representation.
-   *
-   * @param {Context} ctx the transaction context
-   * @returns {Number} Returns the number of decimals
-   */
-  async Decimals(ctx) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
+  describe("#TokenName", () => {
+    it("should work", async () => {
+      mockStub.getState.resolves("some state");
 
-    const decimalsBytes = await ctx.stub.getState(decimalsKey);
-    const decimals = parseInt(decimalsBytes.toString());
-    return decimals;
-  }
+      const response = await token.TokenName(ctx);
+      sinon.assert.calledWith(mockStub.getState, "name");
+      expect(response).to.equals("some state");
+    });
+  });
 
-  /**
-   * Return the total token supply.
-   *
-   * @param {Context} ctx the transaction context
-   * @returns {Number} Returns the total token supply
-   */
-  async TotalSupply(ctx) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
+  describe("#Symbol", () => {
+    it("should work", async () => {
+      mockStub.getState.resolves("some state");
 
-    const totalSupplyBytes = await ctx.stub.getState(totalSupplyKey);
-    const totalSupply = parseInt(totalSupplyBytes.toString());
-    return totalSupply;
-  }
+      const response = await token.Symbol(ctx);
+      sinon.assert.calledWith(mockStub.getState, "symbol");
+      expect(response).to.equals("some state");
+    });
+  });
 
-  /**
-   * BalanceOf returns the balance of the given account.
-   *
-   * @param {Context} ctx the transaction context
-   * @param {String} owner The owner from which the balance will be retrieved
-   * @returns {Number} Returns the account balance
-   */
-  async BalanceOf(ctx, owner) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
+  describe("#Decimals", () => {
+    it("should work", async () => {
+      mockStub.getState.resolves(Buffer.from("2"));
 
-    const balanceKey = ctx.stub.createCompositeKey(balancePrefix, [owner]);
+      const response = await token.Decimals(ctx);
+      sinon.assert.calledWith(mockStub.getState, "decimals");
+      expect(response).to.equals(2);
+    });
+  });
 
-    const balanceBytes = await ctx.stub.getState(balanceKey);
-    if (!balanceBytes || balanceBytes.length === 0) {
-      throw new Error(`the account ${owner} does not exist`);
-    }
-    const balance = parseInt(balanceBytes.toString());
+  describe("#TotalSupply", () => {
+    it("should work", async () => {
+      mockStub.getState.resolves(Buffer.from("10000"));
 
-    return balance;
-  }
+      const response = await token.TotalSupply(ctx);
+      sinon.assert.calledWith(mockStub.getState, "totalSupply");
+      expect(response).to.equals(10000);
+    });
+  });
 
-  /**
-   *  Transfer transfers tokens from client account to recipient account.
-   *  recipient account must be a valid clientID as returned by the ClientAccountID() function.
-   *
-   * @param {Context} ctx the transaction context
-   * @param {String} to The recipient
-   * @param {Integer} value The amount of token to be transferred
-   * @returns {Boolean} Return whether the transfer was successful or not
-   */
-  async Transfer(ctx, to, value) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
+  describe("#BalanceOf", () => {
+    it("should work", async () => {
+      mockStub.createCompositeKey.returns("balance_Alice");
+      mockStub.getState.resolves(Buffer.from("1000"));
 
-    const from = ctx.clientIdentity.getID();
+      const response = await token.BalanceOf(ctx, "Alice");
+      expect(response).to.equals(1000);
+    });
+  });
 
-    const transferResp = await this._transfer(ctx, from, to, value);
-    if (!transferResp) {
-      throw new Error("Failed to transfer");
-    }
-
-    // Emit the Transfer event
-    const transferEvent = { from, to, value: parseInt(value) };
-    ctx.stub.setEvent("Transfer", Buffer.from(JSON.stringify(transferEvent)));
-
-    return true;
-  }
-
-  /**
-   * Transfer `value` amount of tokens from `from` to `to`.
-   *
-   * @param {Context} ctx the transaction context
-   * @param {String} from The sender
-   * @param {String} to The recipient
-   * @param {Integer} value The amount of token to be transferred
-   * @returns {Boolean} Return whether the transfer was successful or not
-   */
-  async TransferFrom(ctx, from, to, value) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
-
-    const spender = ctx.clientIdentity.getID();
-
-    // Retrieve the allowance of the spender
-    const allowanceKey = ctx.stub.createCompositeKey(allowancePrefix, [
-      from,
-      spender,
-    ]);
-    const currentAllowanceBytes = await ctx.stub.getState(allowanceKey);
-
-    if (!currentAllowanceBytes || currentAllowanceBytes.length === 0) {
-      throw new Error(`spender ${spender} has no allowance from ${from}`);
-    }
-
-    const currentAllowance = parseInt(currentAllowanceBytes.toString());
-
-    // Convert value from string to int
-    const valueInt = parseInt(value);
-
-    // Check if the transferred value is less than the allowance
-    if (currentAllowance < valueInt) {
-      throw new Error("The spender does not have enough allowance to spend.");
-    }
-
-    const transferResp = await this._transfer(ctx, from, to, value);
-    if (!transferResp) {
-      throw new Error("Failed to transfer");
-    }
-
-    // Decrease the allowance
-    const updatedAllowance = this.sub(currentAllowance, valueInt);
-    await ctx.stub.putState(
-      allowanceKey,
-      Buffer.from(updatedAllowance.toString()),
-    );
-    console.log(
-      `spender ${spender} allowance updated from ${currentAllowance} to ${updatedAllowance}`,
-    );
-
-    // Emit the Transfer event
-    const transferEvent = { from, to, value: valueInt };
-    ctx.stub.setEvent("Transfer", Buffer.from(JSON.stringify(transferEvent)));
-
-    console.log("transferFrom ended successfully");
-    return true;
-  }
-
-  async _transfer(ctx, from, to, value) {
-    if (from === to) {
-      throw new Error(
-        `cannot transfer to and from same client account: ${from}`,
+  describe("#_transfer", () => {
+    it("should fail when the sender and the receipient are the same", async () => {
+      await expect(
+        token._transfer(ctx, "Alice", "Alice", "1000"),
+      ).to.be.rejectedWith(
+        Error,
+        "cannot transfer to and from same client account",
       );
-    }
+    });
 
-    // Convert value from string to int
-    const valueInt = parseInt(value);
+    it("should fail when the sender does not have enough token", async () => {
+      mockStub.createCompositeKey
+        .withArgs("balance", ["Alice"])
+        .returns("balance_Alice");
+      mockStub.getState.withArgs("balance_Alice").resolves(Buffer.from("500"));
 
-    if (valueInt < 0) {
-      // transfer of 0 is allowed in ERC20, so just validate against negative amounts
-      throw new Error("transfer amount cannot be negative");
-    }
+      await expect(
+        token._transfer(ctx, "Alice", "Bob", "1000"),
+      ).to.be.rejectedWith(
+        Error,
+        "client account Alice has insufficient funds.",
+      );
+    });
 
-    // Retrieve the current balance of the sender
-    const fromBalanceKey = ctx.stub.createCompositeKey(balancePrefix, [from]);
-    const fromCurrentBalanceBytes = await ctx.stub.getState(fromBalanceKey);
+    it("should transfer to a new account when the sender has enough token", async () => {
+      mockStub.createCompositeKey
+        .withArgs("balance", ["Alice"])
+        .returns("balance_Alice");
+      mockStub.getState.withArgs("balance_Alice").resolves(Buffer.from("1000"));
 
-    if (!fromCurrentBalanceBytes || fromCurrentBalanceBytes.length === 0) {
-      throw new Error(`client account ${from} has no balance`);
-    }
+      mockStub.createCompositeKey
+        .withArgs("balance", ["Bob"])
+        .returns("balance_Bob");
+      mockStub.getState.withArgs("balance_Bob").resolves(null);
 
-    const fromCurrentBalance = parseInt(fromCurrentBalanceBytes.toString());
+      const response = await token._transfer(ctx, "Alice", "Bob", "1000");
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(0),
+        "balance_Alice",
+        Buffer.from("0"),
+      );
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(1),
+        "balance_Bob",
+        Buffer.from("1000"),
+      );
+      expect(response).to.equals(true);
+    });
 
-    // Check if the sender has enough tokens to spend.
-    if (fromCurrentBalance < valueInt) {
-      throw new Error(`client account ${from} has insufficient funds.`);
-    }
+    it("should transfer to the existing account when the sender has enough token", async () => {
+      mockStub.createCompositeKey
+        .withArgs("balance", ["Alice"])
+        .returns("balance_Alice");
+      mockStub.getState.withArgs("balance_Alice").resolves(Buffer.from("1000"));
 
-    // Retrieve the current balance of the recipient
-    const toBalanceKey = ctx.stub.createCompositeKey(balancePrefix, [to]);
-    const toCurrentBalanceBytes = await ctx.stub.getState(toBalanceKey);
+      mockStub.createCompositeKey
+        .withArgs("balance", ["Bob"])
+        .returns("balance_Bob");
+      mockStub.getState.withArgs("balance_Bob").resolves(Buffer.from("2000"));
 
-    let toCurrentBalance;
-    // If recipient current balance doesn't yet exist, we'll create it with a current balance of 0
-    if (!toCurrentBalanceBytes || toCurrentBalanceBytes.length === 0) {
-      toCurrentBalance = 0;
-    } else {
-      toCurrentBalance = parseInt(toCurrentBalanceBytes.toString());
-    }
+      const response = await token._transfer(ctx, "Alice", "Bob", "1000");
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(0),
+        "balance_Alice",
+        Buffer.from("0"),
+      );
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(1),
+        "balance_Bob",
+        Buffer.from("3000"),
+      );
+      expect(response).to.equals(true);
+    });
+  });
 
-    // Update the balance
-    const fromUpdatedBalance = this.sub(fromCurrentBalance, valueInt);
-    const toUpdatedBalance = this.add(toCurrentBalance, valueInt);
+  describe("#Transfer", () => {
+    it("should work", async () => {
+      mockClientIdentity.getID.returns("Alice");
+      sinon.stub(token, "_transfer").returns(true);
 
-    await ctx.stub.putState(
-      fromBalanceKey,
-      Buffer.from(fromUpdatedBalance.toString()),
-    );
-    await ctx.stub.putState(
-      toBalanceKey,
-      Buffer.from(toUpdatedBalance.toString()),
-    );
+      const response = await token.Transfer(ctx, "Bob", "1000");
+      const event = { from: "Alice", to: "Bob", value: 1000 };
+      sinon.assert.calledWith(
+        mockStub.setEvent,
+        "Transfer",
+        Buffer.from(JSON.stringify(event)),
+      );
+      expect(response).to.equals(true);
+    });
+  });
 
-    console.log(
-      `client ${from} balance updated from ${fromCurrentBalance} to ${fromUpdatedBalance}`,
-    );
-    console.log(
-      `recipient ${to} balance updated from ${toCurrentBalance} to ${toUpdatedBalance}`,
-    );
+  describe("#TransferFrom", () => {
+    it("should fail when the spender is not allowed to spend the token", async () => {
+      mockClientIdentity.getID.returns("Charlie");
 
-    return true;
-  }
+      mockStub.createCompositeKey
+        .withArgs("allowance", ["Alice", "Charlie"])
+        .returns("allowance_Alice_Charlie");
+      mockStub.getState
+        .withArgs("allowance_Alice_Charlie")
+        .resolves(Buffer.from("0"));
 
-  /**
-   * Allows `spender` to spend `value` amount of tokens from the owner.
-   *
-   * @param {Context} ctx the transaction context
-   * @param {String} spender The spender
-   * @param {Integer} value The amount of tokens to be approved for transfer
-   * @returns {Boolean} Return whether the approval was successful or not
-   */
-  async Approve(ctx, spender, value) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
+      await expect(
+        token.TransferFrom(ctx, "Alice", "Bob", "1000"),
+      ).to.be.rejectedWith(
+        Error,
+        "The spender does not have enough allowance to spend.",
+      );
+    });
 
-    const owner = ctx.clientIdentity.getID();
+    it("should transfer when the spender is allowed to spend the token", async () => {
+      mockClientIdentity.getID.returns("Charlie");
 
-    const allowanceKey = ctx.stub.createCompositeKey(allowancePrefix, [
-      owner,
-      spender,
-    ]);
+      mockStub.createCompositeKey
+        .withArgs("allowance", ["Alice", "Charlie"])
+        .returns("allowance_Alice_Charlie");
+      mockStub.getState
+        .withArgs("allowance_Alice_Charlie")
+        .resolves(Buffer.from("3000"));
 
-    let valueInt = parseInt(value);
-    await ctx.stub.putState(allowanceKey, Buffer.from(valueInt.toString()));
+      sinon.stub(token, "_transfer").returns(true);
 
-    // Emit the Approval event
-    const approvalEvent = { owner, spender, value: valueInt };
-    ctx.stub.setEvent("Approval", Buffer.from(JSON.stringify(approvalEvent)));
+      const response = await token.TransferFrom(ctx, "Alice", "Bob", "1000");
+      sinon.assert.calledWith(
+        mockStub.putState,
+        "allowance_Alice_Charlie",
+        Buffer.from("2000"),
+      );
+      const event = { from: "Alice", to: "Bob", value: 1000 };
+      sinon.assert.calledWith(
+        mockStub.setEvent,
+        "Transfer",
+        Buffer.from(JSON.stringify(event)),
+      );
+      expect(response).to.equals(true);
+    });
+  });
 
-    console.log("approve ended successfully");
-    return true;
-  }
+  describe("#Approve", () => {
+    it("should work", async () => {
+      mockClientIdentity.getID.returns("Dave");
+      mockStub.createCompositeKey.returns("allowance_Dave_Eve");
 
-  /**
-   * Returns the amount of tokens which `spender` is allowed to withdraw from `owner`.
-   *
-   * @param {Context} ctx the transaction context
-   * @param {String} owner The owner of tokens
-   * @param {String} spender The spender who are able to transfer the tokens
-   * @returns {Number} Return the amount of remaining tokens allowed to spent
-   */
-  async Allowance(ctx, owner, spender) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
+      const response = await token.Approve(ctx, "Ellen", "1000");
+      sinon.assert.calledWith(
+        mockStub.putState,
+        "allowance_Dave_Eve",
+        Buffer.from("1000"),
+      );
+      expect(response).to.equals(true);
+    });
+  });
 
-    const allowanceKey = ctx.stub.createCompositeKey(allowancePrefix, [
-      owner,
-      spender,
-    ]);
+  describe("#Allowance", () => {
+    it("should work", async () => {
+      mockStub.createCompositeKey.returns("allowance_Dave_Eve");
+      mockStub.getState.resolves(Buffer.from("1000"));
 
-    const allowanceBytes = await ctx.stub.getState(allowanceKey);
-    if (!allowanceBytes || allowanceBytes.length === 0) {
-      throw new Error(`spender ${spender} has no allowance from ${owner}`);
-    }
+      const response = await token.Allowance(ctx, "Dave", "Eve");
+      expect(response).to.equals(1000);
+    });
+  });
 
-    const allowance = parseInt(allowanceBytes.toString());
-    return allowance;
-  }
+  describe("#Initialize", () => {
+    it("should work", async () => {
+      // We consider it has already been initialized in the before-each statement
+      sinon.assert.calledWith(
+        mockStub.putState,
+        "name",
+        Buffer.from("some name"),
+      );
+      sinon.assert.calledWith(
+        mockStub.putState,
+        "symbol",
+        Buffer.from("some symbol"),
+      );
+      sinon.assert.calledWith(mockStub.putState, "decimals", Buffer.from("2"));
+    });
 
-  // ================== Extended Functions ==========================
-
-  /**
-   * Set optional infomation for a token.
-   *
-   * @param {Context} ctx the transaction context
-   * @param {String} name The name of the token
-   * @param {String} symbol The symbol of the token
-   * @param {String} decimals The decimals of the token
-   * @param {String} totalSupply The totalSupply of the token
-   */
-  async Initialize(ctx, name, symbol, decimals) {
-    // Check minter authorization - this sample assumes Org1 is the central banker with privilege to set Options for these tokens
-    const clientMSPID = ctx.clientIdentity.getMSPID();
-    if (clientMSPID !== "Org1MSP") {
-      throw new Error("client is not authorized to initialize contract");
-    }
-
-    //check contract options are not already set, client is not authorized to change them once initialized
-    const nameBytes = await ctx.stub.getState(nameKey);
-    if (nameBytes && nameBytes.length > 0) {
-      throw new Error(
+    it("should failed if called a second time", async () => {
+      // We consider it has already been initialized in the before-each statement
+      await expect(
+        await token.Initialize(ctx, "some name", "some symbol", "2"),
+      ).to.be.rejectedWith(
+        Error,
         "contract options are already set, client is not authorized to change them",
       );
-    }
+    });
+  });
 
-    await ctx.stub.putState(nameKey, Buffer.from(name));
-    await ctx.stub.putState(symbolKey, Buffer.from(symbol));
-    await ctx.stub.putState(decimalsKey, Buffer.from(decimals));
+  describe("#Mint", () => {
+    it("should add token to a new account and a new total supply", async () => {
+      mockClientIdentity.getMSPID.returns("Org1MSP");
+      mockClientIdentity.getID.returns("Alice");
+      mockStub.createCompositeKey.returns("balance_Alice");
+      mockStub.getState.withArgs("balance_Alice").resolves(null);
+      mockStub.getState.withArgs("totalSupply").resolves(null);
 
-    console.log(`name: ${name}, symbol: ${symbol}, decimals: ${decimals}`);
-
-    await this.initializeAddressMapping(ctx);
-    return true;
-  }
-
-  /**
-   * Mint creates new tokens and adds them to minter's account balance
-   *
-   * @param {Context} ctx the transaction context
-   * @param {Integer} amount amount of tokens to be minted
-   * @returns {Object} The balance
-   */
-  async Mint(ctx, amount) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
-
-    const minter = ctx.clientIdentity.getID();
-
-    // Check minter authorization - this sample assumes Org1 is the central banker with privilege to mint new tokens
-    const clientMSPID = ctx.clientIdentity.getMSPID();
-
-    if (clientMSPID !== "Org1MSP") {
-      throw new Error("client is not authorized to mint new tokens");
-    }
-
-    const amountInt = parseInt(amount);
-    if (amountInt <= 0) {
-      throw new Error("mint amount must be a positive integer");
-    }
-
-    const balanceKey = ctx.stub.createCompositeKey(balancePrefix, [minter]);
-
-    const currentBalanceBytes = await ctx.stub.getState(balanceKey);
-    // If minter current balance doesn't yet exist, we'll create it with a current balance of 0
-    let currentBalance;
-    if (!currentBalanceBytes || currentBalanceBytes.length === 0) {
-      currentBalance = 0;
-    } else {
-      currentBalance = parseInt(currentBalanceBytes.toString());
-    }
-    const updatedBalance = this.add(currentBalance, amountInt);
-
-    await ctx.stub.putState(balanceKey, Buffer.from(updatedBalance.toString()));
-
-    // Increase totalSupply
-    const totalSupplyBytes = await ctx.stub.getState(totalSupplyKey);
-    let totalSupply;
-    if (!totalSupplyBytes || totalSupplyBytes.length === 0) {
-      console.log("Initialize the tokenSupply");
-      totalSupply = 0;
-    } else {
-      totalSupply = parseInt(totalSupplyBytes.toString());
-    }
-    totalSupply = this.add(totalSupply, amountInt);
-    await ctx.stub.putState(
-      totalSupplyKey,
-      Buffer.from(totalSupply.toString()),
-    );
-
-    // Emit the Transfer event
-    const transferEvent = { from: "0x0", to: minter, value: amountInt };
-    ctx.stub.setEvent("Transfer", Buffer.from(JSON.stringify(transferEvent)));
-
-    console.log(
-      `minter account ${minter} balance updated from ${currentBalance} to ${updatedBalance}`,
-    );
-    return true;
-  }
-
-  /**
-   * Burn redeem tokens from minter's account balance
-   *
-   * @param {Context} ctx the transaction context
-   * @param {Integer} amount amount of tokens to be burned
-   * @returns {Object} The balance
-   */
-  async Burn(ctx, amount) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
-
-    // Check minter authorization - this sample assumes Org1 is the central banker with privilege to burn tokens
-    const clientMSPID = ctx.clientIdentity.getMSPID();
-    if (clientMSPID !== "Org1MSP") {
-      throw new Error("client is not authorized to mint new tokens");
-    }
-
-    const minter = ctx.clientIdentity.getID();
-
-    const amountInt = parseInt(amount);
-
-    const balanceKey = ctx.stub.createCompositeKey(balancePrefix, [minter]);
-
-    const currentBalanceBytes = await ctx.stub.getState(balanceKey);
-    if (!currentBalanceBytes || currentBalanceBytes.length === 0) {
-      throw new Error("The balance does not exist");
-    }
-    const currentBalance = parseInt(currentBalanceBytes.toString());
-    const updatedBalance = this.sub(currentBalance, amountInt);
-
-    await ctx.stub.putState(balanceKey, Buffer.from(updatedBalance.toString()));
-
-    // Decrease totalSupply
-    const totalSupplyBytes = await ctx.stub.getState(totalSupplyKey);
-    if (!totalSupplyBytes || totalSupplyBytes.length === 0) {
-      throw new Error("totalSupply does not exist.");
-    }
-    const totalSupply = this.sub(
-      parseInt(totalSupplyBytes.toString()),
-      amountInt,
-    );
-    await ctx.stub.putState(
-      totalSupplyKey,
-      Buffer.from(totalSupply.toString()),
-    );
-
-    // Emit the Transfer event
-    const transferEvent = { from: minter, to: "0x0", value: amountInt };
-    ctx.stub.setEvent("Transfer", Buffer.from(JSON.stringify(transferEvent)));
-
-    console.log(
-      `minter account ${minter} balance updated from ${currentBalance} to ${updatedBalance}`,
-    );
-    return true;
-  }
-
-  /**
-   * ClientAccountBalance returns the balance of the requesting client's account.
-   *
-   * @param {Context} ctx the transaction context
-   * @returns {Number} Returns the account balance
-   */
-  async ClientAccountBalance(ctx) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
-
-    // Get ID of submitting client identity
-    const clientAccountID = ctx.clientIdentity.getID();
-
-    const balanceKey = ctx.stub.createCompositeKey(balancePrefix, [
-      clientAccountID,
-    ]);
-    const balanceBytes = await ctx.stub.getState(balanceKey);
-    if (!balanceBytes || balanceBytes.length === 0) {
-      throw new Error(`the account ${clientAccountID} does not exist`);
-    }
-    const balance = parseInt(balanceBytes.toString());
-
-    return balance;
-  }
-
-  // ClientAccountID returns the id of the requesting client's account.
-  // In this implementation, the client account ID is the clientId itself.
-  // Users can use this function to get their own account id, which they can then give to others as the payment address
-  async ClientAccountID(ctx) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
-
-    // Get ID of submitting client identity
-    const clientAccountID = ctx.clientIdentity.getID();
-    return clientAccountID;
-  }
-
-  //Checks that contract options have been already initialized
-  async CheckInitialized(ctx) {
-    const nameBytes = await ctx.stub.getState(nameKey);
-    if (!nameBytes || nameBytes.length === 0) {
-      throw new Error(
-        "contract options need to be set before calling any function, call Initialize() to initialize contract",
+      const response = await token.Mint(ctx, "1000");
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(0),
+        "balance_Alice",
+        Buffer.from("1000"),
       );
-    }
-  }
-
-  /**
-   *  Escrow transfers tokens from client account to the bridging entity account.
-   *  recipient account must be a valid clientID as returned by the ClientAccountID() function.
-   *
-   * @param {Context} ctx the transaction context
-   * @param {String} to The recipient
-   * @param {Integer} value The amount of token to be transferred
-   * @returns {Boolean} Return whether the transfer was successful or not
-   */
-  async Escrow(ctx, value, id) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
-
-    const from = ctx.clientIdentity.getID();
-
-    const transferResp = await this._transfer(
-      ctx,
-      from,
-      FABRIC_BRIDGE_IDENTITY,
-      value,
-    );
-    if (!transferResp) {
-      throw new Error("Failed to transfer");
-    }
-
-    // Emit the Transfer event
-    const transferEvent = {
-      from,
-      FABRIC_BRIDGE_IDENTITY,
-      value: parseInt(value),
-    };
-    ctx.stub.setEvent("Transfer", Buffer.from(JSON.stringify(transferEvent)));
-
-    // this means that the transfer was made to the bridging entity
-    await ctx.stub.invokeChaincode(
-      "asset-reference-contract",
-      ["CreateAssetReference", id, value.toString(), from.toString()],
-      ctx.stub.getChannelID(),
-    );
-  }
-
-  /**
-   *  Refunds transfers tokens from the bridging entity account to the client account.
-   *  recipient account must be a valid clientID as returned by the ClientAccountID() function.
-   *
-   * @param {Context} ctx the transaction context
-   * @param {String} to The recipient
-   * @param {Integer} value The amount of token to be transferred
-   * @returns {Boolean} Return whether the transfer was successful or not
-   */
-  async Refund(ctx, to, value, eth_address) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
-
-    const from = ctx.clientIdentity.getID();
-
-    if (from !== FABRIC_BRIDGE_IDENTITY) {
-      throw new Error("client is not authorized to refund tokens");
-    }
-
-    const clientEthAddress = await this.getAddressMapping(ctx, to);
-
-    if (clientEthAddress !== eth_address) {
-      throw new Error(
-        "client is not authorized to bridge back tokens to another client account",
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(1),
+        "totalSupply",
+        Buffer.from("1000"),
       );
-    }
+      expect(response).to.equals(true);
+    });
 
-    const transferResp = await this._transfer(ctx, from, to, value);
-    if (!transferResp) {
-      throw new Error("Failed to transfer");
-    }
+    it("should add token to the existing account and the existing total supply", async () => {
+      mockClientIdentity.getMSPID.returns("Org1MSP");
+      mockClientIdentity.getID.returns("Alice");
+      mockStub.createCompositeKey.returns("balance_Alice");
+      mockStub.getState.withArgs("balance_Alice").resolves(Buffer.from("1000"));
+      mockStub.getState.withArgs("totalSupply").resolves(Buffer.from("2000"));
 
-    // Emit the Transfer event
-    const transferEvent = {
-      from,
-      FABRIC_BRIDGE_IDENTITY,
-      value: parseInt(value),
-    };
-    ctx.stub.setEvent("Transfer", Buffer.from(JSON.stringify(transferEvent)));
-  }
+      const response = await token.Mint(ctx, "1000");
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(0),
+        "balance_Alice",
+        Buffer.from("2000"),
+      );
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(1),
+        "totalSupply",
+        Buffer.from("3000"),
+      );
+      expect(response).to.equals(true);
+    });
 
-  async initializeAddressMapping(ctx) {
-    // initialize mapping between Fabric Identities and Ethereum addresses
-    for (let account of accounts) {
-      const addressKey = ctx.stub.createCompositeKey(addressPrefix, [
-        account.fabric,
-      ]);
+    it("should add token to a new account and the existing total supply", async () => {
+      mockClientIdentity.getMSPID.returns("Org1MSP");
+      mockClientIdentity.getID.returns("Alice");
+      mockStub.createCompositeKey.returns("balance_Alice");
+      mockStub.getState.withArgs("balance_Alice").resolves(null);
+      mockStub.getState.withArgs("totalSupply").resolves(Buffer.from("2000"));
 
-      // additionally initialize all addresses to 0
-      const balanceKey = ctx.stub.createCompositeKey(balancePrefix, [
-        account.fabric,
-      ]);
+      const response = await token.Mint(ctx, "1000");
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(0),
+        "balance_Alice",
+        Buffer.from("1000"),
+      );
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(1),
+        "totalSupply",
+        Buffer.from("3000"),
+      );
+      expect(response).to.equals(true);
+    });
+  });
 
-      await ctx.stub.putState(addressKey, Buffer.from(account.ethereum));
-      await ctx.stub.putState(balanceKey, Buffer.from("0"));
-    }
-  }
+  describe("#Burn", () => {
+    it("should work", async () => {
+      mockClientIdentity.getMSPID.returns("Org1MSP");
+      mockClientIdentity.getID.returns("Alice");
+      mockStub.createCompositeKey.returns("balance_Alice");
+      mockStub.getState.withArgs("balance_Alice").resolves(Buffer.from("1000"));
+      mockStub.getState.withArgs("totalSupply").resolves(Buffer.from("2000"));
 
-  async getAddressMapping(ctx, fabricID) {
-    await this.CheckInitialized(ctx);
+      const response = await token.Burn(ctx, "1000");
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(0),
+        "balance_Alice",
+        Buffer.from("0"),
+      );
+      sinon.assert.calledWith(
+        mockStub.putState.getCall(1),
+        "totalSupply",
+        Buffer.from("1000"),
+      );
+      expect(response).to.equals(true);
+    });
+  });
 
-    const addressKey = ctx.stub.createCompositeKey(addressPrefix, [fabricID]);
+  describe("#ClientAccountBalance", () => {
+    it("should work", async () => {
+      mockClientIdentity.getID.returns("Alice");
+      mockStub.createCompositeKey.returns("balance_Alice");
+      mockStub.getState.resolves(Buffer.from("1000"));
 
-    console.log("retrieving address with key: " + addressKey);
-    const addressBytes = await ctx.stub.getState(addressKey);
-    if (!addressBytes || addressBytes.length === 0) {
-      throw new Error(`the account ${fabricID} does not exist`);
-    }
-    const address = addressBytes.toString();
+      const response = await token.ClientAccountBalance(ctx);
+      expect(response).to.equals(1000);
+    });
+  });
 
-    return address;
-  }
+  describe("#ClientAccountID", () => {
+    it("should work", async () => {
+      mockClientIdentity.getID.returns("x509::{subject DN}::{issuer DN}");
 
-  async checkAddressMapping(ctx, fabricID, ethAddress) {
-    const storedAddress = await this.getAddressMapping(ctx, fabricID);
-
-    if (storedAddress != ethAddress) {
-      throw new Error(`it is not possible to bridge CBDC to another user.`);
-    }
-  }
-
-  // add two number checking for overflow
-  add(a, b) {
-    let c = a + b;
-    if (a !== c - b || b !== c - a) {
-      throw new Error(`Math: addition overflow occurred ${a} + ${b}`);
-    }
-    return c;
-  }
-
-  // add two number checking for overflow
-  sub(a, b) {
-    let c = a - b;
-    if (a !== c + b || b !== a - c) {
-      throw new Error(`Math: subtraction overflow occurred ${a} - ${b}`);
-    }
-    return c;
-  }
-
-  /**
-   * Testing purposes function
-   */
-  async ResetState(ctx) {
-    for (let account of accounts) {
-      const balanceKey = ctx.stub.createCompositeKey(balancePrefix, [
-        account.fabric,
-      ]);
-      await ctx.stub.putState(balanceKey, Buffer.from("0"));
-    }
-  }
-}
-
-module.exports = TokenERC20Contract;
+      const response = await token.ClientAccountID(ctx);
+      sinon.assert.calledOnce(mockClientIdentity.getID);
+      expect(response).to.equals("x509::{subject DN}::{issuer DN}");
+    });
+  });
+});

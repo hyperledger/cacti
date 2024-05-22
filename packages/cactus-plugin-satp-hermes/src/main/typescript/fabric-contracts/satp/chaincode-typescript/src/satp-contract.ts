@@ -17,6 +17,10 @@ export class SATPContract
 {
   // GetAllAssetsKey returns all assets key found in the world state.
 
+  constructor() {
+    super("SATP");
+  }
+
   @Transaction(false)
   @Returns("string")
   public async GetAllAssetsKey(ctx: Context): Promise<string> {
@@ -54,17 +58,36 @@ export class SATPContract
   }
 
   @Transaction()
-  public async mint(ctx: Context, amount: number): Promise<void> {
+  public async mint(ctx: Context, amount: number): Promise<boolean> {
     await super.mint(ctx, amount);
+    return true;
   }
 
   @Transaction()
-  public async burn(ctx: Context, amount: number): Promise<void> {
+  public async burn(ctx: Context, amount: number): Promise<boolean> {
     await super.burn(ctx, amount);
+    return true;
   }
 
   @Transaction()
-  public async assign(ctx: Context, to: string, amount: number): Promise<void> {
-    await super.transfer(ctx, to, amount);
+  public async assign(
+    ctx: Context,
+    from: string,
+    to: string,
+    amount: number,
+  ): Promise<boolean> {
+    await super._transfer(ctx, from, to, amount);
+    return true;
+  }
+
+  @Transaction()
+  public async transfer(
+    ctx: Context,
+    from: string,
+    to: string,
+    amount: number,
+  ): Promise<boolean> {
+    await super.TransferFrom(ctx, from, to, amount);
+    return true;
   }
 }

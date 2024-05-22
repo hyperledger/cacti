@@ -52,6 +52,17 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
         ids.push(token.tokenId);
     }
 
+    function wrap2(address assetContract, TokenType tokenType, string memory tokenId, address owner) external onlyOwner {
+        console.log("Wrap token: %s", assetContract);
+        if(tokens[assetContract].assetContract != address(0)) {
+            console.log("Token Already Wrapped");
+            revert TokenAlreadyWrapped(assetContract);
+        }
+        tokens[assetContract] = Token(assetContract, type, tokenId, owner, 0);
+
+        ids.push(tokenId);
+    }
+
     function unwrap(address assetContract) external onlyOwner {
         console.log("Unwrap token: %s", assetContract);
         deleteFromArray(tokens[assetContract].tokenId);
@@ -137,10 +148,6 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
         (bool success, ) = assetContract.call(abi.encodeWithSignature("assign(address,address,uint256)", address(this), receiver_account, amount));
 
         require(success, "assign asset call failed");
-
-        // Unwarp
-        deleteFromArray(tokens[assetContract].tokenId);
-        delete tokens[assetContract];
     }   
 
     function deleteFromArray(string memory id) internal  {

@@ -21,9 +21,10 @@ interface Token {
   address: string;
   tokenType: TokenType;
   tokenId: string;
-  locked: boolean;
+  owner: string;
   channelName: string;
   contractName: string;
+  amount: number;
 }
 
 @Info({
@@ -57,10 +58,42 @@ export class SATPContractWrapper
     token: Token,
     assetContract: string,
   ): Promise<void> {
+    await this.CheckPermission(ctx);
+
     const valueBytes = await ctx.stub.getState(assetContract);
     if (valueBytes) {
       throw new Error("Asset already wrapped");
     }
+
+    await ctx.stub.putState(assetContract, Buffer.from(JSON.stringify(token)));
+  }
+
+  @Transaction()
+  public async wrap2(
+    ctx: Context,
+    assetContract: string,
+    tokenType: TokenType,
+    tokenId: string,
+    owner: string,
+    channelName: string,
+    contractName: string,
+  ): Promise<void> {
+    await this.CheckPermission(ctx);
+
+    const valueBytes = await ctx.stub.getState(assetContract);
+    if (valueBytes) {
+      throw new Error("Asset already wrapped");
+    }
+
+    const token: Token = {
+      address: assetContract,
+      tokenType: tokenType,
+      tokenId: tokenId,
+      owner: owner,
+      channelName: channelName,
+      contractName: contractName,
+      amount: 0,
+    };
 
     await ctx.stub.putState(assetContract, Buffer.from(JSON.stringify(token)));
   }
@@ -71,19 +104,65 @@ export class SATPContractWrapper
   }
 
   @Transaction()
-  public async lock(ctx: Context, assetContract: string): Promise<void> {
+  public async lock(
+    ctx: Context,
+    assetContract: string,
+    amount: number,
+  ): Promise<void> {
+    await this.CheckPermission(ctx);
+
     const token = await this.getToken(ctx, assetContract);
 
-    token.locked = true;
+    const lockResponse = await ctx.stub.invokeChaincode(
+      token.contractName,
+      ["transfer", token.owner, ctx.clientIdentity.getID(), amount.toString()],
+      token.channelName,
+    );
+
+    if (lockResponse.status !== 200) {
+      throw new Error("Lock failed");
+    }
+
+    token.amount += amount;
 
     await ctx.stub.putState(assetContract, Buffer.from(JSON.stringify(token)));
   }
 
   @Transaction()
-  public async unlock(ctx: Context, assetContract: string): Promise<void> {
+  public async unlock(
+    ctx: Context,
+    assetContract: string,
+    amount: number,
+  ): Promise<void> {
+    await this.CheckPermission(ctx);
+
     const token = await this.getToken(ctx, assetContract);
 
-    token.locked = false;
+    if (token.amount < amount) {
+      throw new Error("No sufficient amount locked");
+    }
+
+    const approveResponse = await ctx.stub.invokeChaincode(
+      token.contractName,
+      ["approve", ctx.clientIdentity.getID(), amount.toString()],
+      token.channelName,
+    );
+
+    if (approveResponse.status !== 200) {
+      throw new Error("Approve failed");
+    }
+
+    const unlockResponse = await ctx.stub.invokeChaincode(
+      token.contractName,
+      ["transfer", token.owner, ctx.clientIdentity.getID(), amount.toString()],
+      token.channelName,
+    );
+
+    if (unlockResponse.status !== 200) {
+      throw new Error("Unlock failed");
+    }
+
+    token.amount -= amount;
 
     await ctx.stub.putState(assetContract, Buffer.from(JSON.stringify(token)));
   }
@@ -94,11 +173,9 @@ export class SATPContractWrapper
     assetContract: string,
     amount: number,
   ): Promise<void> {
-    const token = await this.getToken(ctx, assetContract);
+    await this.CheckPermission(ctx);
 
-    if (!token.locked) {
-      throw new Error("Asset not locked");
-    }
+    const token = await this.getToken(ctx, assetContract);
 
     const mintResponse = await ctx.stub.invokeChaincode(
       token.contractName,
@@ -109,6 +186,8 @@ export class SATPContractWrapper
     if (mintResponse.status !== 200) {
       throw new Error("Mint failed");
     }
+
+    token.amount += amount;
   }
 
   @Transaction()
@@ -117,10 +196,12 @@ export class SATPContractWrapper
     assetContract: string,
     amount: number,
   ): Promise<void> {
+    await this.CheckPermission(ctx);
+
     const token = await this.getToken(ctx, assetContract);
 
-    if (!token.locked) {
-      throw new Error("Asset not locked");
+    if (token.amount < amount) {
+      throw new Error("No sufficient amount locked");
     }
 
     const burnResponse = await ctx.stub.invokeChaincode(
@@ -132,6 +213,8 @@ export class SATPContractWrapper
     if (burnResponse.status !== 200) {
       throw new Error("Burn failed");
     }
+
+    token.amount -= amount;
   }
 
   @Transaction()
@@ -141,21 +224,34 @@ export class SATPContractWrapper
     to: string,
     amount: number,
   ): Promise<void> {
+    await this.CheckPermission(ctx);
+
     const token = await this.getToken(ctx, assetContract);
 
-    if (!token.locked) {
-      throw new Error("Asset not locked");
+    if (token.amount < amount) {
+      throw new Error("No sufficient amount locked");
     }
 
     const assignResponse = await ctx.stub.invokeChaincode(
       token.contractName,
-      ["assign", to, amount.toString()],
+      ["assign", ctx.clientIdentity.getID(), to, amount.toString()],
       token.channelName,
     );
 
     if (assignResponse.status !== 200) {
       throw new Error("Assign failed");
     }
+
+    token.amount -= amount;
+  }
+
+  // IsLocked returns true when asset with given ID is locked in world state.
+  @Transaction(false)
+  @Returns("number")
+  public async IsLocked(ctx: Context, assetContract: string): Promise<number> {
+    const token = await this.getToken(ctx, assetContract);
+
+    return token.amount;
   }
 
   // GetAllAssetsKey returns all assets key found in the world state.
@@ -193,5 +289,15 @@ export class SATPContractWrapper
       result = await iterator.next();
     }
     return JSON.stringify(allResults);
+  }
+
+  private async CheckPermission(ctx: Context) {
+    // this needs to be called by entity2 (the bridging entity)
+    const clientMSPID = await ctx.clientIdentity.getMSPID();
+    if (clientMSPID !== "Org2MSP") {
+      throw new Error(
+        `client is not authorized to perform the operation. ${clientMSPID} != "Org2MSP"`,
+      );
+    }
   }
 }

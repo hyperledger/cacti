@@ -7,29 +7,10 @@
 "use strict";
 
 const { Contract } = require("fabric-contract-api");
-const CryptoMaterial = require("../crypto-material/crypto-material.json");
-
-const accounts = [
-  {
-    fabric: CryptoMaterial.accounts.userA.fabricID,
-    ethereum: CryptoMaterial.accounts.userA.ethAddress,
-  },
-  {
-    fabric: CryptoMaterial.accounts.userB.fabricID,
-    ethereum: CryptoMaterial.accounts.userB.ethAddress,
-  },
-  {
-    fabric: CryptoMaterial.accounts.bridge.fabricID,
-    ethereum: CryptoMaterial.accounts.bridge.ethAddress,
-  },
-];
-
-const FABRIC_BRIDGE_IDENTITY = CryptoMaterial.accounts.bridge.fabricID;
 
 // Define objectType names for prefix
 const balancePrefix = "balance";
 const allowancePrefix = "allowance";
-const addressPrefix = "address";
 
 // Define key names for options
 const nameKey = "name";
@@ -48,7 +29,7 @@ class TokenERC20Contract extends Contract {
    * @returns {String} Returns the name of the token
    */
   async TokenName(ctx) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     const nameBytes = await ctx.stub.getState(nameKey);
@@ -63,7 +44,7 @@ class TokenERC20Contract extends Contract {
    * @returns {String} Returns the symbol of the token
    */
   async Symbol(ctx) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     const symbolBytes = await ctx.stub.getState(symbolKey);
@@ -78,7 +59,7 @@ class TokenERC20Contract extends Contract {
    * @returns {Number} Returns the number of decimals
    */
   async Decimals(ctx) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     const decimalsBytes = await ctx.stub.getState(decimalsKey);
@@ -93,7 +74,7 @@ class TokenERC20Contract extends Contract {
    * @returns {Number} Returns the total token supply
    */
   async TotalSupply(ctx) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     const totalSupplyBytes = await ctx.stub.getState(totalSupplyKey);
@@ -109,7 +90,7 @@ class TokenERC20Contract extends Contract {
    * @returns {Number} Returns the account balance
    */
   async BalanceOf(ctx, owner) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     const balanceKey = ctx.stub.createCompositeKey(balancePrefix, [owner]);
@@ -133,7 +114,7 @@ class TokenERC20Contract extends Contract {
    * @returns {Boolean} Return whether the transfer was successful or not
    */
   async Transfer(ctx, to, value) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     const from = ctx.clientIdentity.getID();
@@ -160,7 +141,7 @@ class TokenERC20Contract extends Contract {
    * @returns {Boolean} Return whether the transfer was successful or not
    */
   async TransferFrom(ctx, from, to, value) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     const spender = ctx.clientIdentity.getID();
@@ -211,9 +192,7 @@ class TokenERC20Contract extends Contract {
 
   async _transfer(ctx, from, to, value) {
     if (from === to) {
-      throw new Error(
-        `cannot transfer to and from same client account: ${from}`,
-      );
+      throw new Error("cannot transfer to and from same client account");
     }
 
     // Convert value from string to int
@@ -239,7 +218,7 @@ class TokenERC20Contract extends Contract {
       throw new Error(`client account ${from} has insufficient funds.`);
     }
 
-    // Retrieve the current balance of the recipient
+    // Retrieve the current balance of the recepient
     const toBalanceKey = ctx.stub.createCompositeKey(balancePrefix, [to]);
     const toCurrentBalanceBytes = await ctx.stub.getState(toBalanceKey);
 
@@ -283,7 +262,7 @@ class TokenERC20Contract extends Contract {
    * @returns {Boolean} Return whether the approval was successful or not
    */
   async Approve(ctx, spender, value) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     const owner = ctx.clientIdentity.getID();
@@ -313,7 +292,7 @@ class TokenERC20Contract extends Contract {
    * @returns {Number} Return the amount of remaining tokens allowed to spent
    */
   async Allowance(ctx, owner, spender) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     const allowanceKey = ctx.stub.createCompositeKey(allowancePrefix, [
@@ -348,7 +327,7 @@ class TokenERC20Contract extends Contract {
       throw new Error("client is not authorized to initialize contract");
     }
 
-    //check contract options are not already set, client is not authorized to change them once initialized
+    // Check contract options are not already set, client is not authorized to change them once intitialized
     const nameBytes = await ctx.stub.getState(nameKey);
     if (nameBytes && nameBytes.length > 0) {
       throw new Error(
@@ -361,8 +340,6 @@ class TokenERC20Contract extends Contract {
     await ctx.stub.putState(decimalsKey, Buffer.from(decimals));
 
     console.log(`name: ${name}, symbol: ${symbol}, decimals: ${decimals}`);
-
-    await this.initializeAddressMapping(ctx);
     return true;
   }
 
@@ -374,17 +351,17 @@ class TokenERC20Contract extends Contract {
    * @returns {Object} The balance
    */
   async Mint(ctx, amount) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
-
-    const minter = ctx.clientIdentity.getID();
 
     // Check minter authorization - this sample assumes Org1 is the central banker with privilege to mint new tokens
     const clientMSPID = ctx.clientIdentity.getMSPID();
-
     if (clientMSPID !== "Org1MSP") {
       throw new Error("client is not authorized to mint new tokens");
     }
+
+    // Get ID of submitting client identity
+    const minter = ctx.clientIdentity.getID();
 
     const amountInt = parseInt(amount);
     if (amountInt <= 0) {
@@ -438,7 +415,7 @@ class TokenERC20Contract extends Contract {
    * @returns {Object} The balance
    */
   async Burn(ctx, amount) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     // Check minter authorization - this sample assumes Org1 is the central banker with privilege to burn tokens
@@ -493,7 +470,7 @@ class TokenERC20Contract extends Contract {
    * @returns {Number} Returns the account balance
    */
   async ClientAccountBalance(ctx) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     // Get ID of submitting client identity
@@ -515,7 +492,7 @@ class TokenERC20Contract extends Contract {
   // In this implementation, the client account ID is the clientId itself.
   // Users can use this function to get their own account id, which they can then give to others as the payment address
   async ClientAccountID(ctx) {
-    //check contract options are already set first to execute the function
+    // Check contract options are already set first to execute the function
     await this.CheckInitialized(ctx);
 
     // Get ID of submitting client identity
@@ -523,135 +500,13 @@ class TokenERC20Contract extends Contract {
     return clientAccountID;
   }
 
-  //Checks that contract options have been already initialized
+  // Checks that contract options have been already initialized
   async CheckInitialized(ctx) {
     const nameBytes = await ctx.stub.getState(nameKey);
     if (!nameBytes || nameBytes.length === 0) {
       throw new Error(
         "contract options need to be set before calling any function, call Initialize() to initialize contract",
       );
-    }
-  }
-
-  /**
-   *  Escrow transfers tokens from client account to the bridging entity account.
-   *  recipient account must be a valid clientID as returned by the ClientAccountID() function.
-   *
-   * @param {Context} ctx the transaction context
-   * @param {String} to The recipient
-   * @param {Integer} value The amount of token to be transferred
-   * @returns {Boolean} Return whether the transfer was successful or not
-   */
-  async Escrow(ctx, value, id) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
-
-    const from = ctx.clientIdentity.getID();
-
-    const transferResp = await this._transfer(
-      ctx,
-      from,
-      FABRIC_BRIDGE_IDENTITY,
-      value,
-    );
-    if (!transferResp) {
-      throw new Error("Failed to transfer");
-    }
-
-    // Emit the Transfer event
-    const transferEvent = {
-      from,
-      FABRIC_BRIDGE_IDENTITY,
-      value: parseInt(value),
-    };
-    ctx.stub.setEvent("Transfer", Buffer.from(JSON.stringify(transferEvent)));
-
-    // this means that the transfer was made to the bridging entity
-    await ctx.stub.invokeChaincode(
-      "asset-reference-contract",
-      ["CreateAssetReference", id, value.toString(), from.toString()],
-      ctx.stub.getChannelID(),
-    );
-  }
-
-  /**
-   *  Refunds transfers tokens from the bridging entity account to the client account.
-   *  recipient account must be a valid clientID as returned by the ClientAccountID() function.
-   *
-   * @param {Context} ctx the transaction context
-   * @param {String} to The recipient
-   * @param {Integer} value The amount of token to be transferred
-   * @returns {Boolean} Return whether the transfer was successful or not
-   */
-  async Refund(ctx, to, value, eth_address) {
-    //check contract options are already set first to execute the function
-    await this.CheckInitialized(ctx);
-
-    const from = ctx.clientIdentity.getID();
-
-    if (from !== FABRIC_BRIDGE_IDENTITY) {
-      throw new Error("client is not authorized to refund tokens");
-    }
-
-    const clientEthAddress = await this.getAddressMapping(ctx, to);
-
-    if (clientEthAddress !== eth_address) {
-      throw new Error(
-        "client is not authorized to bridge back tokens to another client account",
-      );
-    }
-
-    const transferResp = await this._transfer(ctx, from, to, value);
-    if (!transferResp) {
-      throw new Error("Failed to transfer");
-    }
-
-    // Emit the Transfer event
-    const transferEvent = {
-      from,
-      FABRIC_BRIDGE_IDENTITY,
-      value: parseInt(value),
-    };
-    ctx.stub.setEvent("Transfer", Buffer.from(JSON.stringify(transferEvent)));
-  }
-
-  async initializeAddressMapping(ctx) {
-    // initialize mapping between Fabric Identities and Ethereum addresses
-    for (let account of accounts) {
-      const addressKey = ctx.stub.createCompositeKey(addressPrefix, [
-        account.fabric,
-      ]);
-
-      // additionally initialize all addresses to 0
-      const balanceKey = ctx.stub.createCompositeKey(balancePrefix, [
-        account.fabric,
-      ]);
-
-      await ctx.stub.putState(addressKey, Buffer.from(account.ethereum));
-      await ctx.stub.putState(balanceKey, Buffer.from("0"));
-    }
-  }
-
-  async getAddressMapping(ctx, fabricID) {
-    await this.CheckInitialized(ctx);
-
-    const addressKey = ctx.stub.createCompositeKey(addressPrefix, [fabricID]);
-
-    console.log("retrieving address with key: " + addressKey);
-    const addressBytes = await ctx.stub.getState(addressKey);
-    if (!addressBytes || addressBytes.length === 0) {
-      throw new Error(`the account ${fabricID} does not exist`);
-    }
-    const address = addressBytes.toString();
-
-    return address;
-  }
-
-  async checkAddressMapping(ctx, fabricID, ethAddress) {
-    const storedAddress = await this.getAddressMapping(ctx, fabricID);
-
-    if (storedAddress != ethAddress) {
-      throw new Error(`it is not possible to bridge CBDC to another user.`);
     }
   }
 
@@ -671,18 +526,6 @@ class TokenERC20Contract extends Contract {
       throw new Error(`Math: subtraction overflow occurred ${a} - ${b}`);
     }
     return c;
-  }
-
-  /**
-   * Testing purposes function
-   */
-  async ResetState(ctx) {
-    for (let account of accounts) {
-      const balanceKey = ctx.stub.createCompositeKey(balancePrefix, [
-        account.fabric,
-      ]);
-      await ctx.stub.putState(balanceKey, Buffer.from("0"));
-    }
   }
 }
 

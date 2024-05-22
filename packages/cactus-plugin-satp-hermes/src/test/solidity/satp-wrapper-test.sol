@@ -86,7 +86,7 @@ contract SATPWrapTest {
         wrapperContract.assign(address(contract1), address(TestsAccounts.getAccount(1)), 10);        
         
         Assert.equal(contract1.balanceOf(TestsAccounts.getAccount(1)), 10, "Token not assign");
-        Assert.equal(wrapperContract.getToken(address(contract1)).assetContract, address(0), "Token was not unwrapped");
+        Assert.equal(contract1.balanceOf(address(wrapperContract)), 0, "Token not assign");
     }
 
     function checkLock() public {
@@ -130,4 +130,3 @@ contract SATPWrapTest {
         Assert.equal(tokenReceived.amount, 0, "Token not unlocked");
     }
 }
-    
