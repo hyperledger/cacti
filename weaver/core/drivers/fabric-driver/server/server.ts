@@ -438,9 +438,9 @@ const configSetup = async () => {
   const walletPath = process.env.WALLET_PATH
     ? process.env.WALLET_PATH
     : path.join(
-        process.cwd(),
-        `wallet-${process.env.NETWORK_NAME ? process.env.NETWORK_NAME : "network1"}`,
-      );
+      process.cwd(),
+      `wallet-${process.env.NETWORK_NAME ? process.env.NETWORK_NAME : "network1"}`,
+    );
   if (process.env.CONNECTION_PROFILE) {
     await walletSetup(walletPath, process.env.CONNECTION_PROFILE);
   } else {

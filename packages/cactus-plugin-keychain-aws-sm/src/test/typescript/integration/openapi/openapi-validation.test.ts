@@ -147,10 +147,9 @@ describe("PluginKeychainAwsSm", () => {
         value,
       } as any as SetKeychainEntryRequestV1);
     } catch (e: any) {
-      t2.equal(
-        e.response.status,
-        400,
-        `Endpoint ${fSet} without required key: response.status === 400 OK`,
+      expect(e.response.status).toEqual(400);
+      console.log(
+        `Endpoint ${fDelete} without required key: response.status === 400 OK`,
       );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
@@ -165,10 +164,9 @@ describe("PluginKeychainAwsSm", () => {
         {} as any as GetKeychainEntryRequestV1,
       );
     } catch (e: any) {
-      t2.equal(
-        e.response.status,
-        400,
-        `Endpoint ${fGet} without required key: response.status === 400 OK`,
+      expect(e.response.status).toEqual(400);
+      console.log(
+        `Endpoint ${fDelete} without required key: response.status === 400 OK`,
       );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
@@ -183,10 +181,9 @@ describe("PluginKeychainAwsSm", () => {
         {} as any as HasKeychainEntryRequestV1,
       );
     } catch (e: any) {
-      t2.equal(
-        e.response.status,
-        400,
-        `Endpoint ${fHas} without required key: response.status === 400 OK`,
+      expect(e.response.status).toEqual(400);
+      console.log(
+        `Endpoint ${fDelete} without required key: response.status === 400 OK`,
       );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
@@ -201,11 +198,11 @@ describe("PluginKeychainAwsSm", () => {
         {} as any as DeleteKeychainEntryRequestV1,
       );
     } catch (e: any) {
-      t2.equal(
-        e.response.status,
-        400,
+      expect(e.response.status).toEqual(400);
+      console.log(
         `Endpoint ${fDelete} without required key: response.status === 400 OK`,
       );
+
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
       );
@@ -221,10 +218,9 @@ describe("PluginKeychainAwsSm", () => {
         fake: 4,
       } as any as SetKeychainEntryRequestV1);
     } catch (e: any) {
-      t2.equal(
-        e.response.status,
-        400,
-        `Endpoint ${fSet} with fake=4: response.status === 400 OK`,
+      expect(e.response.status).toEqual(400);
+      console.log(
+        `Endpoint ${fDelete} with fake = 4: response.status === 400 OK`,
       );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
@@ -233,17 +229,16 @@ describe("PluginKeychainAwsSm", () => {
     }
   });
 
-  test(`${testCase} - ${fGet} - ${cInvalidParams}`, async () => {
+  test(`${testCase} - ${fGet} - ${cInvalidParams} `, async () => {
     try {
       await apiClient.getKeychainEntryV1({
         key,
         fake: 4,
       } as any as GetKeychainEntryRequestV1);
     } catch (e: any) {
-      t2.equal(
-        e.response.status,
-        400,
-        `Endpoint ${fGet} with fake=4: response.status === 400 OK`,
+      expect(e.response.status).toEqual(400);
+      console.log(
+        `Endpoint ${fDelete} with fake = 4: response.status === 400 OK`,
       );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
@@ -252,17 +247,16 @@ describe("PluginKeychainAwsSm", () => {
     }
   });
 
-  test(`${testCase} - ${fHas} - ${cInvalidParams}`, async () => {
+  test(`${testCase} - ${fHas} - ${cInvalidParams} `, async () => {
     try {
       await apiClient.hasKeychainEntryV1({
         key,
         fake: 4,
       } as any as HasKeychainEntryRequestV1);
     } catch (e: any) {
-      t2.equal(
-        e.response.status,
-        400,
-        `Endpoint ${fHas} with fake=4: response.status === 400 OK`,
+      expect(e.response.status).toEqual(400);
+      console.log(
+        `Endpoint ${fDelete} with fake = 4: response.status === 400 OK`,
       );
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
@@ -271,18 +265,18 @@ describe("PluginKeychainAwsSm", () => {
     }
   });
 
-  test(`${testCase} - ${fDelete} - ${cInvalidParams}`, async () => {
+  test(`${testCase} - ${fDelete} - ${cInvalidParams} `, async () => {
     try {
       await apiClient.deleteKeychainEntryV1({
         key,
         fake: 4,
       } as any as DeleteKeychainEntryRequestV1);
     } catch (e: any) {
-      t2.equal(
-        e.response.status,
-        400,
-        `Endpoint ${fDelete} with fake=4: response.status === 400 OK`,
+      expect(e.response.status).toEqual(400);
+      console.log(
+        `Endpoint ${fDelete} with fake = 4: response.status === 400 OK`,
       );
+
       const fields = e.response.data.map((param: any) =>
         param.path.replace("/body/", ""),
       );
