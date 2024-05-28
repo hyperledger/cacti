@@ -8,12 +8,13 @@
         "module": "commonjs",
         "declaration": true,
         "sourceMap": true,
-        "allowJs": true
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true
     },
     "include": [
         "./src/**/*"
     ],
     "exclude": [
-        "./src/**/*.spec.ts"
     ]
 }

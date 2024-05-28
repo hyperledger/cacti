@@ -9,7 +9,7 @@
 const { Context } = require("fabric-contract-api");
 const { ChaincodeStub, ClientIdentity } = require("fabric-shim");
 
-const { TokenERC20Contract } = require("..");
+const { TokenERC20Contract } = require("../lib/tokenERC20");
 
 const chai = require("chai");
 const chaiAsPromised = require("chai-as-promised");

@@ -41,113 +41,111 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
         bridge_address = address(_bridge_address);
     }
 
-    function wrap(Token memory token, address assetContract) external onlyOwner {
+    function wrap(address assetContract, TokenType tokenType, string memory tokenId, address owner) external onlyOwner returns (bool success) {
         console.log("Wrap token: %s", assetContract);
         if(tokens[assetContract].assetContract != address(0)) {
             console.log("Token Already Wrapped");
             revert TokenAlreadyWrapped(assetContract);
         }
-        tokens[assetContract] = token;
-
-        ids.push(token.tokenId);
-    }
-
-    function wrap2(address assetContract, TokenType tokenType, string memory tokenId, address owner) external onlyOwner {
-        console.log("Wrap token: %s", assetContract);
-        if(tokens[assetContract].assetContract != address(0)) {
-            console.log("Token Already Wrapped");
-            revert TokenAlreadyWrapped(assetContract);
-        }
-        tokens[assetContract] = Token(assetContract, type, tokenId, owner, 0);
+        tokens[tokenId] = Token(assetContract, type, tokenId, owner, 0);
 
         ids.push(tokenId);
+        return true;
     }
 
-    function unwrap(address assetContract) external onlyOwner {
-        console.log("Unwrap token: %s", assetContract);
-        deleteFromArray(tokens[assetContract].tokenId);
-        console.log("Deleted from array token: %s", assetContract);
-        delete tokens[assetContract];
+    function unwrap(string tokenId) external onlyOwner returns (bool success) {
+        console.log("Unwrap token: %s", tokenId);
+        deleteFromArray(tokens[tokenId].tokenId);
+        console.log("Deleted from array token: %s", tokenId);
+        delete tokens[tokenId];
+
+        return true;
     }
 
-    function lock(address assetContract, uint256 amount) external onlyOwner returns (bool success) {
-        console.log("Lock token: %s\n amount: %s", assetContract, amount);
-        if(tokens[assetContract].assetContract == address(0)){
-            revert TokenNotAvailable(assetContract);
+    function lock(string tokenId, uint256 amount) external onlyOwner returns (bool success) {
+        console.log("Lock token: %s\n amount: %s", tokenId, amount);
+        if(tokens[tokenId].assetContract == address(0)){
+            revert TokenNotAvailable(tokenId);
         }
 
-        (bool success,) = assetContract.call(abi.encodeWithSignature("transfer(address,address,uint256)", tokens[assetContract].owner, address(this), amount));
+        (bool success,) = tokens[tokenId].assetContract.call(abi.encodeWithSignature("transfer(address,address,uint256)", tokens[tokenId].owner, address(this), amount));
 
         if(success) {
-            tokens[assetContract].amount += amount; 
+            tokens[tokenId].amount += amount; 
             return true;
         }
 
-        revert TokenNotLocked(assetContract);
+        revert TokenNotLocked(tokenId);
     } 
 
-    function unlock(address assetContract, uint256 amount) external onlyOwner returns (bool success) { //ammount
-        console.log("Unlock token: %s\n amount: %s", assetContract, amount);
-        if(tokens[assetContract].assetContract == address(0)){
-            revert TokenNotAvailable(assetContract);
+    function unlock(string tokenId, uint256 amount) external onlyOwner returns (bool success) { //ammount
+        console.log("Unlock token: %s\n amount: %s", tokenId, amount);
+        if(tokens[tokenId].assetContract == address(0)){
+            revert TokenNotAvailable(tokenId);
         }
 
-        if(tokens[assetContract].amount < amount) {
-            revert InsuficientAmountLocked(assetContract, amount);
+        if(tokens[tokenId].amount < amount) {
+            revert InsuficientAmountLocked(tokenId, amount);
         }
 
-        (bool successAprov,) = assetContract.call(abi.encodeWithSignature("approve(address,uint256)", address(this), amount));
+        (bool successAprov,) = tokens[tokenId].assetContract.call(abi.encodeWithSignature("approve(address,uint256)", address(this), amount));
         if(!successAprov) {
-            revert TokenNotUnlocked(assetContract);
+            revert TokenNotUnlocked(tokenId);
         }
 
-        (bool success,) = assetContract.call(abi.encodeWithSignature("transfer(address,address,uint256)", address(this), tokens[assetContract].owner, tokens[assetContract].amount));
+        (bool success,) = tokens[tokenId].assetContract.call(abi.encodeWithSignature("transfer(address,address,uint256)", address(this), tokens[tokenId].owner, tokens[tokenId].amount));
         if(success) {
-            tokens[assetContract].amount -= amount;
+            tokens[tokenId].amount -= amount;
             return true;
         }
 
-        revert TokenNotUnlocked(assetContract);
+        revert TokenNotUnlocked(tokenId);
     } 
     
     function getAllAssetsIDs() external view returns (string[] memory) {
         return ids;
     }
 
-    function mint(address assetContract, uint256 amount) external onlyOwner {
+    function mint(string tokenId, uint256 amount) external onlyOwner returns (bool success) {
         console.log("Wrapper Mint to: %s\n amount: %s", assetContract, amount);
 
-        if(tokens[assetContract].assetContract == address(0)){
-            revert TokenNotAvailable(assetContract);
+        if(tokens[tokenId].assetContract == address(0)){
+            revert TokenNotAvailable(tokenId);
         }
 
-        (bool success, ) = assetContract.call(abi.encodeWithSignature("mint(address,uint256)", address(this), amount));
+        (bool success, ) = tokens[tokenId].assetContract.call(abi.encodeWithSignature("mint(address,uint256)", address(this), amount));
         
         require(success, "mint asset call failed");
 
-        tokens[assetContract].amount = amount; 
+        tokens[tokenId].amount = amount; 
+
+        return true;
     }
 
-    function burn(address assetContract, uint256 amount) external onlyOwner {
-        console.log("Wrapper Burn from: %s\n amount: %s", assetContract, amount);
+    function burn(string tokenId, uint256 amount) external onlyOwner returns (bool success) {
+        console.log("Wrapper Burn from: %s\n amount: %s", tokenId, amount);
 
-        require(tokens[assetContract].amount >= amount, "burn asset asset is not locked");
+        require(tokens[tokenId].amount >= amount, "burn asset asset is not locked");
 
-        (bool success, ) = assetContract.call(abi.encodeWithSignature("burn(address,uint256)",  address(this), amount));
+        (bool success, ) = tokens[tokenId].assetContract.call(abi.encodeWithSignature("burn(address,uint256)",  address(this), amount));
 
         require(success, "burn asset call failed");
 
-        tokens[assetContract].amount -= amount; 
+        tokens[tokenId].amount -= amount; 
+
+        return true;
     }
 
-    function assign(address assetContract, address receiver_account, uint256 amount) external onlyOwner {
-        console.log("Wrapper Assign from: %s\n to: %s\n amount: %s", assetContract, receiver_account, amount);
+    function assign(string tokenId, address receiver_account, uint256 amount) external onlyOwner returns (bool success) {
+        console.log("Wrapper Assign from: %s\n to: %s\n amount: %s", tokenId, receiver_account, amount);
 
-        require(tokens[assetContract].amount >= amount, "assign asset asset is not locked");
+        require(tokens[tokenId].amount >= amount, "assign asset asset is not locked");
 
-        (bool success, ) = assetContract.call(abi.encodeWithSignature("assign(address,address,uint256)", address(this), receiver_account, amount));
+        (bool success, ) = tokens[tokenId].assetContract.call(abi.encodeWithSignature("assign(address,address,uint256)", address(this), receiver_account, amount));
 
         require(success, "assign asset call failed");
+
+        return true;
     }   
 
     function deleteFromArray(string memory id) internal  {
@@ -160,7 +158,7 @@ contract SATPWrapperContract is Ownable, ITraceableContract{
         }
     }
 
-    function getToken(address assetContract) view public returns (Token memory token) {
-        return tokens[assetContract];
+    function getToken(string tokenId) view public returns (Token memory token) {
+        return tokens[tokenId];
     }
 }

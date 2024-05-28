@@ -5,7 +5,7 @@
     "outDir": "./dist/lib/", /* Redirect output structure to the directory. */
     "declarationDir": "dist/lib",
     "resolveJsonModule": true,
-    "allowJs": true, // is this necessary to be false?
+    "allowJs": false,
     "skipLibCheck": true,
     "rootDir": "./src/",
     "tsBuildInfoFile": "../../.build-cache/cactus-plugin-satp-hermes.tsbuildinfo",
@@ -19,7 +19,7 @@
     "src/**/*.json"
   ],
   "exclude":[
-    "./src/test/typescript/fabric-contracts/lock-asset/chaincode-typescript/**/*.ts"
+    "./src/main/typescript/fabric-contracts/**/*.ts", 
   ],
   "references": [
     {

@@ -5,7 +5,10 @@
 import { Context, Info, Returns, Transaction } from "fabric-contract-api";
 import { ITraceableContract } from "@hyperledger/cactus-plugin-bungee-hermes/src/test/typescript/fabric-contracts/simple-asset/chaincode-typescript/src/ITraceableContract";
 
+//const TokenERC20Contract = require("../lib/tokenERC20");
+
 import TokenERC20Contract from "../lib/tokenERC20";
+import { SATPContractInterface } from "./satp-contract-interface";
 
 @Info({
   title: "SATPContract",
@@ -13,12 +16,26 @@ import TokenERC20Contract from "../lib/tokenERC20";
 })
 export class SATPContract
   extends TokenERC20Contract
-  implements ITraceableContract
+  implements ITraceableContract, SATPContractInterface
 {
   // GetAllAssetsKey returns all assets key found in the world state.
 
   constructor() {
-    super("SATP");
+    super("SATP-token");
+  }
+
+  @Transaction(false)
+  public async Initialize(ctx: Context, owner: string): Promise<boolean> {
+    await super.Initialize(ctx, "SATPContract", "SATP", "2");
+    await ctx.stub.putState("owner", Buffer.from(owner));
+    return true;
+  }
+
+  @Transaction(false)
+  public async setBridge(ctx: Context, bridge: string): Promise<boolean> {
+    this.checkPermission(ctx);
+    await ctx.stub.putState("bridge", Buffer.from(bridge));
+    return true;
   }
 
   @Transaction(false)
@@ -59,13 +76,15 @@ export class SATPContract
 
   @Transaction()
   public async mint(ctx: Context, amount: number): Promise<boolean> {
+    this.checkPermission(ctx);
     await super.Mint(ctx, amount);
     return true;
   }
 
   @Transaction()
   public async burn(ctx: Context, amount: number): Promise<boolean> {
-    await super.Burn(ctx, amount);
+    this.checkPermission(ctx);
+    await this.Burn(ctx, amount);
     return true;
   }
 
@@ -76,7 +95,15 @@ export class SATPContract
     to: string,
     amount: number,
   ): Promise<boolean> {
-    await super._transfer(ctx, from, to, amount);
+    this.checkPermission(ctx);
+    const clientMSPID = await ctx.clientIdentity.getMSPID();
+
+    if (from !== clientMSPID) {
+      throw new Error(
+        `client is not authorized to perform the operation. ${clientMSPID} != ${from}`,
+      );
+    }
+    await this._transfer(ctx, from, to, amount);
     return true;
   }
 
@@ -87,7 +114,26 @@ export class SATPContract
     to: string,
     amount: number,
   ): Promise<boolean> {
-    await super.TransferFrom(ctx, from, to, amount);
+    this.checkPermission(ctx);
+    await this.TransferFrom(ctx, from, to, amount);
     return true;
+  }
+
+  private async checkPermission(ctx: Context) {
+    let owner = await ctx.stub.getState("owner");
+    let bridge = await ctx.stub.getState("bridge");
+
+    owner = owner ? owner : Buffer.from("");
+
+    bridge = bridge ? bridge : Buffer.from("");
+
+    const clientMSPID = await ctx.clientIdentity.getMSPID();
+    if (
+      !(clientMSPID == owner.toString() || clientMSPID == bridge.toString())
+    ) {
+      throw new Error(
+        `client is not authorized to perform the operation. ${clientMSPID}`,
+      );
+    }
   }
 }

@@ -1,71 +1,230 @@
-// /*
-//  * Copyright IBM Corp. All Rights Reserved.
-//  *
-//  * SPDX-License-Identifier: Apache-2.0
-//  */
+/*
+ * Copyright IBM Corp. All Rights Reserved.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import { ChaincodeStub, ClientIdentity } from "fabric-shim";
+import { SATPContract } from "./../src/satp-contract";
 
-// import { Context } from "fabric-contract-api";
-// import { ChaincodeStub, ClientIdentity } from "fabric-shim";
-// import { SATPContract } from "./../src/satp-contract";
+import chai from "chai";
+import chaiAsPromised from "chai-as-promised";
+import sinon from "sinon";
+import sinonChai from "sinon-chai";
+import { expect } from "chai";
 
-// import * as winston from "winston";
-// import * as chai from "chai";
-// import * as chaiAsPromised from "chai-as-promised";
-// import * as sinon from "sinon";
-// import * as sinonChai from "sinon-chai";
+chai.should();
+chai.use(chaiAsPromised);
+chai.use(sinonChai);
 
-// const bridgedOutAmountKey = "amountBridgedOut";
+describe("SATPContract", () => {
+  let contract: SATPContract;
+  let sandbox;
+  let ctx;
 
-// const USER_A_FABRIC_ID =
-//   "x509::/OU=org1/OU=client/OU=department1/CN=userA::/C=US/ST=North Carolina/L=Durham/O=org1.example.com/CN=ca.org1.example.com";
+  beforeEach(async () => {
+    sandbox = sinon.createSandbox();
+    contract = new SATPContract();
+    ctx = sinon.createStubInstance(ChaincodeStub);
+    ctx.stub = sinon.createStubInstance(ChaincodeStub);
+    ctx.clientIdentity = sinon.createStubInstance(ClientIdentity);
 
-// const USER_A_ETH_ADDRESS =
-//   "x509::/OU=org1/OU=client/OU=department1/CN=userA::/C=US/ST=North Carolina/L=Durham/O=org1.example.com/CN=ca.org1.example.com";
+    ctx.clientIdentity.getMSPID.returns("Org1MSP");
+    ctx.stub.getState.withArgs("owner").resolves("Org1MSP");
+    ctx.stub.getState.withArgs("bridge").resolves("bridge");
 
-// chai.should();
-// chai.use(chaiAsPromised);
-// chai.use(sinonChai);
+    await contract.Initialize(ctx, "Org1MSP");
+    ctx.stub.getState.withArgs("name").resolves("SATPContract");
+  });
 
-// class TestContext extends Context {
-//   public stub: sinon.SinonStubbedInstance<ChaincodeStub> =
-//     sinon.createStubInstance(ChaincodeStub);
-//   public clientIdentity: sinon.SinonStubbedInstance<ClientIdentity> =
-//     sinon.createStubInstance(ClientIdentity);
-//   public logging = {
-//     getLogger: sinon
-//       .stub()
-//       .returns(sinon.createStubInstance(winston.createLogger().constructor)),
-//     setLevel: sinon.stub(),
-//   };
-// }
+  afterEach(() => {
+    sandbox.restore();
+  });
 
-// describe("SATPContract", () => {
-//   let contract: SATPContract;
-//   let ctx: TestContext;
+  describe("#mint", () => {
+    it("should add token to a new account and a new total supply", async () => {
+      ctx.clientIdentity.getID.returns("Org1MSP");
+      ctx.stub.createCompositeKey.returns("balance_Org1MSP");
+      ctx.stub.getState.withArgs("balance_Org1MSP").resolves(null);
+      ctx.stub.getState.withArgs("totalSupply").resolves(null);
 
-//   beforeEach(() => {
-//     contract = new SATPContract();
-//     ctx = new TestContext();
-//     ctx.clientIdentity.getMSPID.resolves("Org2MSP");
-//     ctx.stub.getState.withArgs(bridgedOutAmountKey).resolves(Buffer.from("50"));
-//   });
+      const response = await contract.mint(ctx, 1000);
 
-//   describe("#mint", () => {
-//     it("should mint asset", async () => {
-//       ctx.clientIdentity.getMSPID.returns("Org1MSP");
-//       ctx.clientIdentity.getID.returns("Alice");
-//       ctx.stub.createCompositeKey.returns("balance_Alice");
-//       const response = await contract.mint(ctx, 100);
-//       sinon.assert.calledWith(
-//         ctx.stub.putState.getCall(0),
-//         "balance_Alice",
-//         Buffer.from("100"),
-//       );
-//       ctx.stub.putState.should.have.been.calledWith(
-//         bridgedOutAmountKey,
-//         Buffer.from("100"),
-//       );
-//       chai.expect(response).to.equals(true);
-//     });
-//   });
-// });
+      sinon.assert.calledWith(
+        ctx.stub.putState,
+        "balance_Org1MSP",
+        Buffer.from("1000"),
+      );
+      sinon.assert.calledWith(
+        ctx.stub.putState,
+        "totalSupply",
+        Buffer.from("1000"),
+      );
+      expect(response).to.equals(true);
+    });
+  });
+
+  describe("#burn", () => {
+    it("should work", async () => {
+      ctx.clientIdentity.getID.returns("Org1MSP");
+      ctx.stub.createCompositeKey.returns("balance_Org1MSP");
+      ctx.stub.getState
+        .withArgs("balance_Org1MSP")
+        .resolves(Buffer.from("1000"));
+      ctx.stub.getState.withArgs("totalSupply").resolves(Buffer.from("2000"));
+
+      const response = await contract.burn(ctx, 1000);
+      sinon.assert.calledWith(
+        ctx.stub.putState,
+        "balance_Org1MSP",
+        Buffer.from("0"),
+      );
+      sinon.assert.calledWith(
+        ctx.stub.putState,
+        "totalSupply",
+        Buffer.from("1000"),
+      );
+      expect(response).to.equals(true);
+    });
+  });
+
+  describe("#assign", () => {
+    it("should fail when the sender and the recipient are the same", async () => {
+      ctx.clientIdentity.getMSPID.returns("bridge");
+      await expect(
+        contract.assign(ctx, "bridge", "bridge", 1000),
+      ).to.be.rejectedWith(
+        Error,
+        "cannot transfer to and from same client account",
+      );
+    });
+
+    it("should fail when the message sender does not have permition", async () => {
+      ctx.clientIdentity.getMSPID.returns("attacker");
+      await expect(
+        contract.assign(ctx, "bridge", "attacker", 1000),
+      ).to.be.rejectedWith(
+        Error,
+        "client is not authorized to perform the operation. attacker",
+      );
+    });
+
+    it("should fail when the sender does not have enough token", async () => {
+      ctx.clientIdentity.getMSPID.returns("bridge");
+      ctx.stub.createCompositeKey
+        .withArgs("balance", ["bridge"])
+        .returns("balance_bridge");
+      ctx.stub.getState.withArgs("balance_bridge").resolves(Buffer.from("500"));
+
+      await expect(
+        contract.assign(ctx, "bridge", "Alice", 1000),
+      ).to.be.rejectedWith(
+        Error,
+        "client account bridge has insufficient funds.",
+      );
+    });
+
+    it("should transfer to a new account when the sender has enough token", async () => {
+      ctx.clientIdentity.getMSPID.returns("bridge");
+      ctx.stub.createCompositeKey
+        .withArgs("balance", ["bridge"])
+        .returns("balance_bridge");
+      ctx.stub.getState
+        .withArgs("balance_bridge")
+        .resolves(Buffer.from("1000"));
+
+      ctx.stub.createCompositeKey
+        .withArgs("balance", ["Bob"])
+        .returns("balance_Bob");
+      ctx.stub.getState.withArgs("balance_Bob").resolves(null);
+
+      const response = await contract.assign(ctx, "bridge", "Bob", 1000);
+      sinon.assert.calledWith(
+        ctx.stub.putState,
+        "balance_bridge",
+        Buffer.from("0"),
+      );
+      sinon.assert.calledWith(
+        ctx.stub.putState,
+        "balance_Bob",
+        Buffer.from("1000"),
+      );
+      expect(response).to.equals(true);
+    });
+
+    it("should transfer to the existing account when the sender has enough token", async () => {
+      ctx.clientIdentity.getMSPID.returns("bridge");
+      ctx.stub.createCompositeKey
+        .withArgs("balance", ["bridge"])
+        .returns("balance_bridge");
+      ctx.stub.getState
+        .withArgs("balance_bridge")
+        .resolves(Buffer.from("1000"));
+
+      ctx.stub.createCompositeKey
+        .withArgs("balance", ["Bob"])
+        .returns("balance_Bob");
+      ctx.stub.getState.withArgs("balance_Bob").resolves(Buffer.from("2000"));
+
+      const response = await contract.assign(ctx, "bridge", "Bob", 1000);
+      sinon.assert.calledWith(
+        ctx.stub.putState,
+        "balance_bridge",
+        Buffer.from("0"),
+      );
+      sinon.assert.calledWith(
+        ctx.stub.putState,
+        "balance_Bob",
+        Buffer.from("3000"),
+      );
+      expect(response).to.equals(true);
+    });
+  });
+  describe("#transfer", () => {
+    it("should fail when the spender is not allowed to spend the token", async () => {
+      ctx.clientIdentity.getMSPID.returns("bridge");
+      ctx.clientIdentity.getID.returns("bridge");
+
+      ctx.stub.createCompositeKey
+        .withArgs("allowance", ["owner", "bridge"])
+        .returns("allowance_owner_bridge");
+      ctx.stub.getState
+        .withArgs("allowance_owner_bridge")
+        .resolves(Buffer.from("0"));
+
+      await expect(
+        contract.transfer(ctx, "owner", "bridge", 1000),
+      ).to.be.rejectedWith(
+        Error,
+        "The spender does not have enough allowance to spend.",
+      );
+    });
+
+    it("should transfer when the spender is allowed to spend the token", async () => {
+      ctx.clientIdentity.getMSPID.returns("bridge");
+      ctx.clientIdentity.getID.returns("bridge");
+
+      ctx.stub.createCompositeKey
+        .withArgs("allowance", ["owner", "bridge"])
+        .returns("allowance_owner_bridge");
+      ctx.stub.getState
+        .withArgs("allowance_owner_bridge")
+        .resolves(Buffer.from("3000"));
+
+      sinon.stub(contract, "_transfer").resolves(true);
+
+      const response = await contract.transfer(ctx, "owner", "bridge", 1000);
+      sinon.assert.calledWith(
+        ctx.stub.putState,
+        "allowance_owner_bridge",
+        Buffer.from("2000"),
+      );
+      const event = { from: "owner", to: "bridge", value: 1000 };
+      sinon.assert.calledWith(
+        ctx.stub.setEvent,
+        "Transfer",
+        Buffer.from(JSON.stringify(event)),
+      );
+      expect(response).to.equals(true);
+    });
+  });
+});

@@ -11,21 +11,7 @@ import {
 } from "fabric-contract-api";
 import { ITraceableContract } from "@hyperledger/cactus-plugin-bungee-hermes/src/test/typescript/fabric-contracts/simple-asset/chaincode-typescript/src/ITraceableContract";
 
-enum TokenType {
-  ERC20 = "ERC20",
-  ERC721 = "ERC721",
-  ERC1155 = "ERC1155",
-}
-
-interface Token {
-  address: string;
-  tokenType: TokenType;
-  tokenId: string;
-  owner: string;
-  channelName: string;
-  contractName: string;
-  amount: number;
-}
+import { Token, TokenType } from "./token";
 
 @Info({
   title: "SATPContractWrapper",
@@ -42,51 +28,50 @@ export class SATPContractWrapper
     this.bridge_address = _bridge_address;
   }
 
-  public async getToken(ctx: Context, assetContract: string): Promise<Token> {
-    const valueBytes = await ctx.stub.getState(assetContract);
+  @Transaction(false)
+  public async Initialize(ctx: Context, owner: string): Promise<boolean> {
+    await ctx.stub.putState("owner", Buffer.from(owner));
+    return true;
+  }
+
+  @Transaction(false)
+  public async setBridge(ctx: Context, bridge: string): Promise<boolean> {
+    this.checkPermission(ctx);
+    await ctx.stub.putState("bridge", Buffer.from(bridge));
+    return true;
+  }
+
+  @Transaction()
+  public async getToken(ctx: Context, tokenId: string): Promise<Token> {
+    const valueBytes: Uint8Array = await ctx.stub.getState(tokenId);
 
     if (!valueBytes) {
-      throw new Error("Asset not available");
+      throw new Error(`Asset with ID ${tokenId} does not exist`);
     }
 
-    return JSON.parse(valueBytes.toString());
+    return JSON.parse(valueBytes.toString()) as Token;
   }
 
   @Transaction()
+  @Returns("boolean")
   public async wrap(
     ctx: Context,
-    token: Token,
-    assetContract: string,
-  ): Promise<void> {
-    await this.CheckPermission(ctx);
-
-    const valueBytes = await ctx.stub.getState(assetContract);
-    if (valueBytes) {
-      throw new Error("Asset already wrapped");
-    }
-
-    await ctx.stub.putState(assetContract, Buffer.from(JSON.stringify(token)));
-  }
-
-  @Transaction()
-  public async wrap2(
-    ctx: Context,
-    assetContract: string,
+    assetContractID: string,
     tokenType: TokenType,
     tokenId: string,
     owner: string,
     channelName: string,
     contractName: string,
-  ): Promise<void> {
-    await this.CheckPermission(ctx);
+  ): Promise<boolean> {
+    await this.checkPermission(ctx);
 
-    const valueBytes = await ctx.stub.getState(assetContract);
+    const valueBytes = await ctx.stub.getState(tokenId);
     if (valueBytes) {
-      throw new Error("Asset already wrapped");
+      throw new Error(`Asset with ID ${tokenId} is already wrapped`);
     }
 
     const token: Token = {
-      address: assetContract,
+      address: assetContractID,
       tokenType: tokenType,
       tokenId: tokenId,
       owner: owner,
@@ -95,27 +80,51 @@ export class SATPContractWrapper
       amount: 0,
     };
 
-    await ctx.stub.putState(assetContract, Buffer.from(JSON.stringify(token)));
+    await ctx.stub.putState(tokenId, Buffer.from(JSON.stringify(token)));
+    return true;
   }
 
   @Transaction()
-  public async unwrap(ctx: Context, assetContract: string): Promise<void> {
-    await ctx.stub.deleteState(assetContract);
+  @Returns("boolean")
+  public async unwrap(ctx: Context, tokenId: string): Promise<boolean> {
+    await this.checkPermission(ctx);
+
+    const token = await this.getToken(ctx, tokenId);
+
+    if (token.amount > 0) {
+      throw new Error("Token has locked amount");
+    }
+
+    await ctx.stub.deleteState(tokenId);
+    return true;
   }
 
   @Transaction()
+  @Returns("number")
+  public async lockedAmount(ctx: Context, tokenId: string): Promise<number> {
+    await this.checkPermission(ctx);
+
+    const token = await this.getToken(ctx, tokenId);
+
+    return token.amount;
+  }
+
+  @Transaction()
+  @Returns("boolean")
   public async lock(
     ctx: Context,
-    assetContract: string,
+    tokenId: string,
     amount: number,
-  ): Promise<void> {
-    await this.CheckPermission(ctx);
+  ): Promise<boolean> {
+    await this.checkPermission(ctx);
 
-    const token = await this.getToken(ctx, assetContract);
+    const token = await this.getToken(ctx, tokenId);
+
+    const to = await ctx.clientIdentity.getMSPID();
 
     const lockResponse = await ctx.stub.invokeChaincode(
       token.contractName,
-      ["transfer", token.owner, ctx.clientIdentity.getID(), amount.toString()],
+      ["transfer", token.owner, to, amount.toString()],
       token.channelName,
     );
 
@@ -125,26 +134,34 @@ export class SATPContractWrapper
 
     token.amount += amount;
 
-    await ctx.stub.putState(assetContract, Buffer.from(JSON.stringify(token)));
+    await ctx.stub.putState(tokenId, Buffer.from(JSON.stringify(token)));
+    return true;
   }
 
   @Transaction()
   public async unlock(
     ctx: Context,
-    assetContract: string,
+    tokenId: string,
     amount: number,
-  ): Promise<void> {
-    await this.CheckPermission(ctx);
+  ): Promise<boolean> {
+    await this.checkPermission(ctx);
 
-    const token = await this.getToken(ctx, assetContract);
+    const token = await this.getToken(ctx, tokenId);
 
     if (token.amount < amount) {
-      throw new Error("No sufficient amount locked");
+      throw new Error(
+        "No sufficient amount locked, total tried to unlock: " +
+          amount +
+          " total locked: " +
+          token.amount,
+      );
     }
+
+    const spender = await ctx.clientIdentity.getMSPID();
 
     const approveResponse = await ctx.stub.invokeChaincode(
       token.contractName,
-      ["approve", ctx.clientIdentity.getID(), amount.toString()],
+      ["Approve", spender, amount.toString()],
       token.channelName,
     );
 
@@ -154,7 +171,7 @@ export class SATPContractWrapper
 
     const unlockResponse = await ctx.stub.invokeChaincode(
       token.contractName,
-      ["transfer", token.owner, ctx.clientIdentity.getID(), amount.toString()],
+      ["transfer", token.owner, spender, amount.toString()],
       token.channelName,
     );
 
@@ -164,18 +181,20 @@ export class SATPContractWrapper
 
     token.amount -= amount;
 
-    await ctx.stub.putState(assetContract, Buffer.from(JSON.stringify(token)));
+    await ctx.stub.putState(tokenId, Buffer.from(JSON.stringify(token)));
+    return true;
   }
 
   @Transaction()
+  @Returns("boolean")
   public async mint(
     ctx: Context,
-    assetContract: string,
+    tokenId: string,
     amount: number,
-  ): Promise<void> {
-    await this.CheckPermission(ctx);
+  ): Promise<boolean> {
+    await this.checkPermission(ctx);
 
-    const token = await this.getToken(ctx, assetContract);
+    const token = await this.getToken(ctx, tokenId);
 
     const mintResponse = await ctx.stub.invokeChaincode(
       token.contractName,
@@ -188,17 +207,21 @@ export class SATPContractWrapper
     }
 
     token.amount += amount;
+
+    await ctx.stub.putState(tokenId, Buffer.from(JSON.stringify(token)));
+    return true;
   }
 
   @Transaction()
+  @Returns("boolean")
   public async burn(
     ctx: Context,
-    assetContract: string,
+    tokenId: string,
     amount: number,
-  ): Promise<void> {
-    await this.CheckPermission(ctx);
+  ): Promise<boolean> {
+    await this.checkPermission(ctx);
 
-    const token = await this.getToken(ctx, assetContract);
+    const token = await this.getToken(ctx, tokenId);
 
     if (token.amount < amount) {
       throw new Error("No sufficient amount locked");
@@ -215,26 +238,32 @@ export class SATPContractWrapper
     }
 
     token.amount -= amount;
+
+    await ctx.stub.putState(tokenId, Buffer.from(JSON.stringify(token)));
+    return true;
   }
 
   @Transaction()
+  @Returns("boolean")
   public async assign(
     ctx: Context,
-    assetContract: string,
+    tokenId: string,
     to: string,
     amount: number,
-  ): Promise<void> {
-    await this.CheckPermission(ctx);
+  ): Promise<boolean> {
+    await this.checkPermission(ctx);
 
-    const token = await this.getToken(ctx, assetContract);
+    const token = await this.getToken(ctx, tokenId);
 
     if (token.amount < amount) {
       throw new Error("No sufficient amount locked");
     }
 
+    const from = await ctx.clientIdentity.getMSPID();
+
     const assignResponse = await ctx.stub.invokeChaincode(
       token.contractName,
-      ["assign", ctx.clientIdentity.getID(), to, amount.toString()],
+      ["assign", from, to, amount.toString()],
       token.channelName,
     );
 
@@ -243,15 +272,9 @@ export class SATPContractWrapper
     }
 
     token.amount -= amount;
-  }
 
-  // IsLocked returns true when asset with given ID is locked in world state.
-  @Transaction(false)
-  @Returns("number")
-  public async IsLocked(ctx: Context, assetContract: string): Promise<number> {
-    const token = await this.getToken(ctx, assetContract);
-
-    return token.amount;
+    await ctx.stub.putState(tokenId, Buffer.from(JSON.stringify(token)));
+    return true;
   }
 
   // GetAllAssetsKey returns all assets key found in the world state.
@@ -291,12 +314,38 @@ export class SATPContractWrapper
     return JSON.stringify(allResults);
   }
 
-  private async CheckPermission(ctx: Context) {
-    // this needs to be called by entity2 (the bridging entity)
+  // add two number checking for overflow
+  add(a, b) {
+    const c = a + b;
+    if (a !== c - b || b !== c - a) {
+      throw new Error(`Math: addition overflow occurred ${a} + ${b}`);
+    }
+    return c;
+  }
+
+  // add two number checking for overflow
+  sub(a, b) {
+    const c = a - b;
+    if (a !== c + b || b !== a - c) {
+      throw new Error(`Math: subtraction overflow occurred ${a} - ${b}`);
+    }
+    return c;
+  }
+
+  private async checkPermission(ctx: Context) {
+    let owner = await ctx.stub.getState("owner");
+    let bridge = await ctx.stub.getState("bridge");
+
+    owner = owner ? owner : Buffer.from("");
+
+    bridge = bridge ? bridge : Buffer.from("");
+
     const clientMSPID = await ctx.clientIdentity.getMSPID();
-    if (clientMSPID !== "Org2MSP") {
+    if (
+      !(clientMSPID == owner.toString() || clientMSPID == bridge.toString())
+    ) {
       throw new Error(
-        `client is not authorized to perform the operation. ${clientMSPID} != "Org2MSP"`,
+        `client is not authorized to perform the operation. ${clientMSPID}`,
       );
     }
   }
