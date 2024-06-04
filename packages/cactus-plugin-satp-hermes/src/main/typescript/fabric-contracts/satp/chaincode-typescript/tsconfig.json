@@ -7,12 +7,14 @@
         "moduleResolution": "node",
         "module": "commonjs",
         "declaration": true,
-        "sourceMap": true
+        "sourceMap": true,
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true
     },
     "include": [
         "./src/**/*"
     ],
     "exclude": [
-        "./src/**/*.spec.ts"
     ]
 }
