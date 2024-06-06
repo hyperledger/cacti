@@ -13,6 +13,8 @@ import { ConnectRouter } from "@connectrpc/connect";
 import { SATPGateway } from "../plugin-satp-hermes-gateway";
 import { SATPService } from "../types/satp-protocol";
 import { PromiseClient as PromiseConnectClient } from "@connectrpc/connect";
+import { IPrivacyPolicyValue } from "@hyperledger/cactus-plugin-bungee-hermes/src/main/typescript/view-creation/privacy-policies";
+import { IMergePolicyValue } from "@hyperledger/cactus-plugin-bungee-hermes/src/main/typescript/view-merging/merge-policies";
 
 export type SATPConnectHandler = (
   gateway: SATPGateway,
@@ -82,6 +84,8 @@ export interface SATPGatewayConfig {
   environment?: "development" | "production";
   enableOpenAPI?: boolean;
   validationOptions?: ValidatorOptions;
+  privacyPolicies?: IPrivacyPolicyValue[];
+  mergePolicies?: IMergePolicyValue[];
 }
 export type Immutable<T> = {
   readonly [K in keyof T]: Immutable<T[K]>;
