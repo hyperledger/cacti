@@ -1691,7 +1691,7 @@ jobs:
         run: DOCKER_BUILDKIT=1 docker build . -f ./packages/cactus-plugin-ledger-connector-quorum/Dockerfile -t plugin-ledger-connector-quorum
       - if: ${{ env.RUN_TRIVY_SCAN == 'true' }}
         name: Run Trivy vulnerability scan for plugin-ledger-connector-quorum
-        uses: aquasecurity/trivy-action@0.19.0
+        uses: aquasecurity/trivy-action@0.52.1
         with:
           image-ref: 'plugin-ledger-connector-quorum'
           format: 'table'
@@ -2173,7 +2173,7 @@ jobs:
         run: DOCKER_BUILDKIT=1 docker build . -f ./packages/cactus-cmd-api-server/Dockerfile -t cactus-cmd-api-server
       - if: ${{ env.RUN_TRIVY_SCAN == 'true' }}
         name: Run Trivy vulnerability scan for cactus-cmd-api-server
-        uses: aquasecurity/trivy-action@0.19.0
+        uses: aquasecurity/trivy-action@0.52.1
         with:
           image-ref: 'cactus-cmd-api-server'
           format: 'table'
@@ -2192,7 +2192,7 @@ jobs:
         run: DOCKER_BUILDKIT=1 docker build ./packages/cactus-plugin-ledger-connector-besu/ -f ./packages/cactus-plugin-ledger-connector-besu/Dockerfile -t cactus-connector-besu
       - if: ${{ env.RUN_TRIVY_SCAN == 'true' }}
         name: Run Trivy vulnerability scan for cactus-connector-besu
-        uses: aquasecurity/trivy-action@0.19.0
+        uses: aquasecurity/trivy-action@0.52.1
         with:
           image-ref: 'cactus-connector-besu'
           format: 'table'
@@ -2212,7 +2212,7 @@ jobs:
         run: DOCKER_BUILDKIT=1 docker build ./packages/cactus-plugin-ledger-connector-corda/src/main-server/ -f ./packages/cactus-plugin-ledger-connector-corda/src/main-server/Dockerfile -t cactus-connector-corda-server
       - if: ${{ env.RUN_TRIVY_SCAN == 'true' }}
         name: Run Trivy vulnerability scan for cactus-connector-corda-server
-        uses: aquasecurity/trivy-action@0.19.0
+        uses: aquasecurity/trivy-action@0.52.1
         with:
           image-ref: 'cactus-connector-corda-server'
           format: 'table'
@@ -2232,7 +2232,7 @@ jobs:
         run: DOCKER_BUILDKIT=1 docker build ./packages/cactus-plugin-ledger-connector-fabric/ -f ./packages/cactus-plugin-ledger-connector-fabric/Dockerfile -t cactus-connector-fabric
       - if: ${{ env.RUN_TRIVY_SCAN == 'true' }}
         name: Run Trivy vulnerability scan for cactus-connector-fabric
-        uses: aquasecurity/trivy-action@0.19.0
+        uses: aquasecurity/trivy-action@0.52.1
         with:
           image-ref: 'cactus-connector-fabric'
           format: 'table'
@@ -2312,7 +2312,7 @@ jobs:
         run: DOCKER_BUILDKIT=1 docker build ./packages/cactus-plugin-keychain-vault/src/cactus-keychain-vault-server/ -f ./packages/cactus-plugin-keychain-vault/src/cactus-keychain-vault-server/Dockerfile -t cactus-keychain-vault-server
       - if: ${{ env.RUN_TRIVY_SCAN == 'true' }}
         name: Run Trivy vulnerability scan for cactus-keychain-vault-server
-        uses: aquasecurity/trivy-action@0.19.0
+        uses: aquasecurity/trivy-action@0.52.1
         with:
           image-ref: 'cactus-keychain-vault-server'
           format: 'table'
