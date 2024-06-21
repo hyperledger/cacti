@@ -1,37 +1,13 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
-import Root from "./components/AppShell/Root";
-import ethConfig from "./apps/eth/index";
-import fabricConfig from "./apps/fabric";
+// Needed to fix vite caching error of MUI - see https://github.com/vitejs/vite/issues/12423
+import "@mui/material/styles/styled";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Root />,
-    children: [
-      {
-        path: "eth",
-        element: (
-          <div>
-            <Outlet></Outlet>
-          </div>
-        ),
-        children: ethConfig.routes,
-      },
-      {
-        path: "fabric",
-        element: (
-          <div>
-            <Outlet></Outlet>
-          </div>
-        ),
-        children: fabricConfig.routes,
-      },
-    ],
-  },
-]);
+import * as React from "react";
+import * as ReactDOM from "react-dom/client";
+import { appConfig } from "./common/config";
+import CactiLedgerBrowserApp from "./CactiLedgerBrowserApp";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <RouterProvider router={router} />,
+  <React.StrictMode>
+    <CactiLedgerBrowserApp appConfig={appConfig} />
+  </React.StrictMode>,
 );

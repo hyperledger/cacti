@@ -1,63 +1,69 @@
-import { supabase } from "../../../../common/supabase-client";
-import CardWrapper from "../../../../components/ui/CardWrapper";
-import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import * as React from "react";
+import { ethers } from "ethers";
+import SearchIcon from "@mui/icons-material/Search";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
 
-function Accounts() {
-  const params = useParams();
-  const navigate = useNavigate();
-  const [accounts, setAccounts] = useState<{ address: string }[]>([]);
-  const [searchKey, setSearchKey] = useState("");
+import AccountTokenList from "./AccountTokenList";
+import AccountTransactionList from "./AccountTransactionList";
 
-  const tableProps = {
-    onClick: {
-      action: (param: string) => navigate(`/eth/${params.standard}/${param}`),
-      prop: "address",
-    },
-    schema: [
-      {
-        display: "Account address",
-        objProp: ["address"],
-      },
-    ],
-  };
+export default function Accounts() {
+  const [accountSearchText, setAccountSearchText] = React.useState("");
+  const [errorText, setErrorText] = React.useState("");
+  const [account, setAccount] = React.useState("");
 
-  const fetchAccounts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from(`token_${params.standard?.toLowerCase()}`)
-        .select("account_address");
-      if (data) {
-        const objData = [...new Set(data.map((el) => el.account_address))].map(
-          (el) => ({ address: el }),
-        );
-        setAccounts(objData);
-      }
-      if (error) {
-        console.error(error.message);
-      }
-    } catch (error: any) {
-      console.error(error.message);
+  const handleSearchClick = () => {
+    if (!ethers.isAddress(accountSearchText.toLowerCase())) {
+      return setErrorText(
+        "Address format not recognized, use valid hexadecimal address",
+      );
     }
-  };
 
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
+    setAccount(accountSearchText);
+  };
 
   return (
-    <div>
-      <CardWrapper
-        display={"All"}
-        title={"Accounts"}
-        columns={tableProps}
-        data={accounts}
-        filters={["address"]}
-        trimmed={false}
-        getSearchValue={(e: any) => setSearchKey(e)}
-      ></CardWrapper>
-    </div>
+    <Box>
+      {/* Search Bar */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Box sx={{ padding: 2 }}>
+          <TextField
+            label="Account address"
+            sx={{ width: 600 }}
+            variant={account ? "filled" : "standard"}
+            value={accountSearchText}
+            onChange={(e) => {
+              setErrorText("");
+              setAccountSearchText(e.target.value.trim());
+            }}
+            error={Boolean(errorText)}
+            helperText={errorText}
+          />
+        </Box>
+        <Button
+          variant="contained"
+          size="large"
+          endIcon={<SearchIcon />}
+          onClick={handleSearchClick}
+        >
+          Search
+        </Button>
+      </Box>
+
+      {/* Account transactions */}
+      <Box paddingBottom={4}>
+        {account && <AccountTransactionList accountAddress={account} />}
+      </Box>
+
+      {/* Account token list */}
+      {account && <AccountTokenList accountAddress={account} />}
+    </Box>
   );
 }
-
-export default Accounts;

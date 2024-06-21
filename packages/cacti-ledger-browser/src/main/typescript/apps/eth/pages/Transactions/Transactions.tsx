@@ -1,66 +1,20 @@
-import { supabase } from "../../../../common/supabase-client";
-import { Transaction } from "../../../../common/supabase-types";
-import CardWrapper from "../../../../components/ui/CardWrapper";
+import Box from "@mui/material/Box";
+import TransactionList from "../../components/TransactionList/TransactionList";
+import PageTitleWithGoBack from "../../../../components/ui/PageTitleWithGoBack";
+import UITableListingPaginationAction from "../../../../components/ui/UITableListing/UITableListingPaginationAction";
+import { ethAllTransactionsQuery } from "../../queries";
 
-import styles from "./Transactions.module.css";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-
-function Transactions() {
-  const navigate = useNavigate();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-
-  const txnTableProps = {
-    onClick: {
-      action: (param: string) => navigate(`/eth/txn-details/${param}`),
-      prop: "id",
-    },
-    schema: [
-      {
-        display: "transaction id",
-        objProp: ["id"],
-      },
-      {
-        display: "sender/recipient",
-        objProp: ["from", "to"],
-      },
-      {
-        display: "token value",
-        objProp: ["eth_value"],
-      },
-    ],
-  };
-
-  const fetchTransactions = async () => {
-    try {
-      const { data } = await supabase.from("transaction").select("*");
-      if (data) {
-        console.log(JSON.stringify(data));
-        setTransactions(data);
-      } else {
-        throw new Error("Failed to load transactions");
-      }
-    } catch (error: any) {
-      console.error(error.message);
-    }
-  };
-
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
-
+export default function Transactions() {
   return (
-    <div className={styles["transactions"]}>
-      <CardWrapper
-        columns={txnTableProps}
-        title={"Transactions"}
-        display={"All"}
-        data={transactions}
-        filters={["id", "from", "to"]}
-        trimmed={false}
-      ></CardWrapper>
-    </div>
+    <Box>
+      <PageTitleWithGoBack>Transactions</PageTitleWithGoBack>
+      <TransactionList
+        queryFunction={ethAllTransactionsQuery}
+        footerComponent={UITableListingPaginationAction}
+        columns={["hash", "block", "from", "to", "value", "method"]}
+        rowsPerPage={40}
+        tableSize="small"
+      />
+    </Box>
   );
 }
-
-export default Transactions;

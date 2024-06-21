@@ -1,93 +1,57 @@
-import DashFabric from "./pages/DashFabric/DashFabric";
-import TransactionsFabric from "./pages/TransactionsFabric/TransactionsFabric";
-import BlocksFabric from "./pages/BlocksFabric/BlocksFabric";
-import FabricTransaction from "./pages/FabricTransaction/FabricTransaction";
-import FabricBlock from "./pages/FabricBlock/FabricBlock";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import Blocks from "./pages/Blocks/Blocks";
+import Transactions from "./pages/Transactions/Transactions";
 import { Outlet } from "react-router-dom";
-
-interface AppConfig {
-  name: string;
-  url: string;
-  pluginName: string;
-  menuEntries: {
-    title: string;
-    url: string;
-  }[];
-  routes: any;
-}
+import TransactionDetails from "./pages/TransactionDetails/TransactionDetails";
+import { AppConfig } from "../../common/types/app";
+import { usePersistenceAppStatus } from "../../common/hook/use-persistence-app-status";
+import PersistencePluginStatus from "../../components/PersistencePluginStatus/PersistencePluginStatus";
 
 const fabricConfig: AppConfig = {
-  name: "Fabric",
-  url: "fabric",
-  pluginName: "PluginPersistenceFabric",
+  appName: "Hyperledger Fabric Browser",
+  options: {
+    instanceName: "Fabric",
+    description:
+      "Applicaion for browsing Hyperledger Fabric ledger blocks and transactions. Requires Fabric persistence plugin to work correctly.",
+    path: "/fabric",
+  },
   menuEntries: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: "/",
     },
   ],
   routes: [
     {
-      path: "dashboard",
-      element: (
-        <div>
-          <DashFabric></DashFabric>
-        </div>
-      ),
-    },
-    {
-      path: "transactions",
-      element: (
-        <div>
-          <TransactionsFabric></TransactionsFabric>
-        </div>
-      ),
+      element: <Dashboard />,
     },
     {
       path: "blocks",
-      element: (
-        <div>
-          <BlocksFabric></BlocksFabric>
-        </div>
-      ),
+      element: <Blocks />,
     },
     {
-      path: "txn-details",
-      element: (
-        <div>
-          <Outlet></Outlet>
-        </div>
-      ),
-      children: [
-        {
-          path: ":id",
-          element: (
-            <div>
-              <FabricTransaction></FabricTransaction>
-            </div>
-          ),
-        },
-      ],
+      path: "transactions",
+      element: <Transactions />,
     },
     {
-      path: "block-details",
-      element: (
-        <div>
-          <Outlet></Outlet>
-        </div>
-      ),
+      path: "transaction",
+      element: <Outlet />,
       children: [
         {
-          path: ":id",
+          path: ":hash",
           element: (
             <div>
-              <FabricBlock></FabricBlock>
+              <TransactionDetails />
             </div>
           ),
         },
       ],
     },
   ],
+  useAppStatus: () => usePersistenceAppStatus("PluginPersistenceFabric"),
+  StatusComponent: (
+    <PersistencePluginStatus pluginName="PluginPersistenceFabric" />
+  ),
 };
 
 export default fabricConfig;
