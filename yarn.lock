@@ -8864,33 +8864,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hyperledger/cactus-plugin-ledger-connector-tcs-huawei-socketio@workspace:packages/cactus-plugin-ledger-connector-tcs-huawei-socketio":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/cactus-plugin-ledger-connector-tcs-huawei-socketio@workspace:packages/cactus-plugin-ledger-connector-tcs-huawei-socketio"
-  dependencies:
-    "@types/body-parser": "npm:1.19.3"
-    "@types/config": "npm:0.0.41"
-    "@types/cookie-parser": "npm:1.4.5"
-    "@types/express": "npm:4.17.21"
-    "@types/http-errors": "npm:2.0.1"
-    "@types/node": "npm:18.11.9"
-    body-parser: "npm:1.20.2"
-    cbor: "npm:6.0.1"
-    config: "npm:3.3.7"
-    cookie-parser: "npm:1.4.6"
-    debug: "npm:4.3.1"
-    express: "npm:4.19.2"
-    js-yaml: "npm:3.14.1"
-    jsonwebtoken: "npm:8.5.1"
-    log4js: "npm:6.4.1"
-    morgan: "npm:1.10.0"
-    serve-favicon: "npm:2.4.5"
-    shelljs: "npm:0.8.5"
-    socket.io: "npm:4.5.4"
-    xmlhttprequest: "npm:1.8.0"
-  languageName: unknown
-  linkType: soft
-
 "@hyperledger/cactus-plugin-ledger-connector-xdai@npm:2.0.0-rc.1, @hyperledger/cactus-plugin-ledger-connector-xdai@workspace:packages/cactus-plugin-ledger-connector-xdai":
   version: 0.0.0-use.local
   resolution: "@hyperledger/cactus-plugin-ledger-connector-xdai@workspace:packages/cactus-plugin-ledger-connector-xdai"
@@ -14536,13 +14509,6 @@ __metadata:
   dependencies:
     "@types/express": "npm:*"
   checksum: 10/1276449683418fa2442b4d97af70c670b9b322506f25fd027ff74a1d7555c199129581db3c491315ac3c2e8e10085731ac92a93cd556ee6a7dfff81d6c72d9c6
-  languageName: node
-  linkType: hard
-
-"@types/config@npm:0.0.41":
-  version: 0.0.41
-  resolution: "@types/config@npm:0.0.41"
-  checksum: 10/528eb5e5d60c48cf82a2b0988ee1e5e088472698ad25944131b0ba87b2e3bb0989f3b4d45edb9d49eefcc8bf158c267905c386aaec15857b9fb24be449c3f27c
   languageName: node
   linkType: hard
 
@@ -20267,16 +20233,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cbor@npm:6.0.1":
-  version: 6.0.1
-  resolution: "cbor@npm:6.0.1"
-  dependencies:
-    bignumber.js: "npm:^9.0.1"
-    nofilter: "npm:^1.0.4"
-  checksum: 10/bcc41e3af491a01316bf849293332000b9bc754572ef99a5c6f076eace208366493e5f96f7fb35827f4cbf495c0fb16684fe86dea91be444d42eb4cfed9868e2
-  languageName: node
-  linkType: hard
-
 "cbor@npm:9.0.1":
   version: 9.0.1
   resolution: "cbor@npm:9.0.1"
@@ -22843,18 +22799,6 @@ __metadata:
     supports-color:
       optional: true
   checksum: 10/0073c3bcbd9cb7d71dd5f6b55be8701af42df3e56e911186dfa46fac3a5b9eb7ce7f377dd1d3be6db8977221f8eb333d945216f645cf56f6b688cd484837d255
-  languageName: node
-  linkType: hard
-
-"debug@npm:4.3.1":
-  version: 4.3.1
-  resolution: "debug@npm:4.3.1"
-  dependencies:
-    ms: "npm:2.1.2"
-  peerDependenciesMeta:
-    supports-color:
-      optional: true
-  checksum: 10/37b9f90428b65e59eb47f74435a9fc73dcb46b3550e838c0037ac05910f689bd59fd1d4a51154c1df3471a2f3e5926af8880cbe9f9f3b68beb7b2f8197a26f4a
   languageName: node
   linkType: hard
 
