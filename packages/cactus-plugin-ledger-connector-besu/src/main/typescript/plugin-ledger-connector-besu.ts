@@ -17,10 +17,12 @@ import Web3JsQuorum, { IWeb3Quorum } from "web3js-quorum";
 
 import { Contract, ContractSendMethod } from "web3-eth-contract";
 import { TransactionReceipt } from "web3-eth";
+
 import {
   GetBalanceV1Request,
   GetBalanceV1Response,
   Web3TransactionReceipt,
+  DeployContractSolidityBytecodeNoKeychainV1Request,
 } from "./generated/openapi/typescript-axios/index";
 
 import {
@@ -56,6 +58,7 @@ import {
 } from "@hyperledger/cactus-common";
 
 import { DeployContractSolidityBytecodeEndpoint } from "./web-services/deploy-contract-solidity-bytecode-endpoint";
+import { DeployContractSolidityBytecodeNoKeychainEndpoint } from "./web-services/deploy-contract-solidity-bytecode-no-keychain-endpoint";
 
 import {
   WatchBlocksV1,
@@ -278,6 +281,13 @@ export class PluginLedgerConnectorBesu
     const endpoints: IWebServiceEndpoint[] = [];
     {
       const endpoint = new DeployContractSolidityBytecodeEndpoint({
+        connector: this,
+        logLevel: this.options.logLevel,
+      });
+      endpoints.push(endpoint);
+    }
+    {
+      const endpoint = new DeployContractSolidityBytecodeNoKeychainEndpoint({
         connector: this,
         logLevel: this.options.logLevel,
       });
@@ -961,6 +971,83 @@ export class PluginLedgerConnectorBesu
       contractJSON.networks = network;
 
       await keychainPlugin.set(contractName, JSON.stringify(contractJSON));
+    }
+
+    // creating solidity byte code response
+    const deployResponse: DeployContractSolidityBytecodeV1Response = {
+      transactionReceipt: runTxResponse.transactionReceipt,
+    };
+
+    return deployResponse;
+  }
+
+  public async deployContractNoKeychain(
+    req: DeployContractSolidityBytecodeNoKeychainV1Request,
+  ): Promise<DeployContractSolidityBytecodeV1Response> {
+    const fnTag = `${this.className}#deployContract()`;
+    Checks.truthy(req, `${fnTag} req`);
+    if (isWeb3SigningCredentialNone(req.web3SigningCredential)) {
+      throw new Error(`${fnTag} Cannot deploy contract with pre-signed TX`);
+    }
+    const { contractName, contractJSONString } = req;
+    const networkId = await this.web3.eth.net.getId();
+
+    const tmpContract = new this.web3.eth.Contract(req.contractAbi);
+    const deployment = tmpContract.deploy({
+      data: req.bytecode,
+      arguments: req.constructorArgs,
+    });
+
+    const abi = deployment.encodeABI();
+    const data = abi.startsWith("0x") ? abi : `0x${abi}`;
+    this.log.debug(`Deploying "${req.contractName}" with data %o`, data);
+
+    const web3SigningCredential = req.web3SigningCredential as
+      | Web3SigningCredentialPrivateKeyHex
+      | Web3SigningCredentialCactusKeychainRef;
+
+    const runTxResponse = await this.transact({
+      transactionConfig: {
+        data,
+        from: web3SigningCredential.ethAccount,
+        gas: req.gas,
+        gasPrice: req.gasPrice,
+      },
+      consistencyStrategy: {
+        blockConfirmations: 0,
+        receiptType: ReceiptType.NodeTxPoolAck,
+        timeoutMs: req.timeoutMs || 60000,
+      },
+      web3SigningCredential,
+      privateTransactionConfig: req.privateTransactionConfig,
+    });
+
+    const { transactionReceipt: receipt } = runTxResponse;
+    const { status, contractAddress } = receipt;
+
+    Checks.truthy(status, `${this.className}#deployContract():status`);
+
+    Checks.truthy(
+      contractAddress,
+      `${this.className}#deployContract():contractAddress`,
+    );
+
+    if (contractJSONString) {
+      const networkInfo = { address: contractAddress };
+      const contractJSON = JSON.parse(contractJSONString);
+      this.log.debug("Contract JSON: \n%o", JSON.stringify(contractJSON));
+      const contract = new this.web3.eth.Contract(
+        contractJSON.abi,
+        contractAddress || " ",
+      );
+      this.contracts[contractName] = contract;
+      const network = { [networkId]: networkInfo };
+      contractJSON.networks = network;
+    } else {
+      const errorMessage =
+        `${fnTag} Cannot create an instance of the contract instance because` +
+        `the contractName in the request does not exist on the keychain`;
+      throw new createHttpError[400](errorMessage);
     }
 
     // creating solidity byte code response
