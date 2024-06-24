@@ -67,7 +67,7 @@ const factory = new PluginFactoryPersistenceFabricBlock({
 
 const persistencePlugin = await factory.create({
   instanceId: uuidv4(),
-  apiClient: new SocketIOApiClient(apiConfigOptions),
+  apiClient: new FabricApiClient(apiConfigOptions),
   logLevel: "info",
   connectionString:
     "postgresql://postgres:your-super-secret-and-long-postgres-password@localhost:5432/postgres",

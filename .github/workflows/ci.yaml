@@ -12,7 +12,7 @@
 ---
 env:
   NODEJS_VERSION: v18.18.2
-  RUN_TRIVY_SCAN: true 
+  RUN_TRIVY_SCAN: true
 jobs:
   ActionLint:
     uses: ./.github/workflows/actionlint.yaml
@@ -1062,7 +1062,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
       - run: ./tools/ci.sh
-      
+
       - name: Ensure .tmp Directory Exists
         run: mkdir -p .tmp/benchmark-results/plugin-ledger-connector-besu/
 
@@ -1152,7 +1152,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
       - run: ./tools/ci.sh
-  
+
   cpl-connector-stellar:
     continue-on-error: false
     needs:
@@ -1612,32 +1612,6 @@ jobs:
       - run: npm run configure
       - run: yarn jest ./packages/cactus-plugin-ledger-connector-fabric/src/test/typescript/integration/fabric-v2-2-x/run-transaction-with-ws-ids.test.ts
 
-  cplc-go-ethereum-socketio:
-    continue-on-error: false
-    env:
-      DEV_BUILD_DISABLED: false
-      FULL_BUILD_DISABLED: true
-      JEST_TEST_PATTERN: packages/cactus-plugin-ledger-connector-go-ethereum-socketio/src/test/typescript/(unit|integration|benchmark)/.*/*.test.ts
-      JEST_TEST_RUNNER_DISABLED: true
-      TAPE_TEST_RUNNER_DISABLED: true
-    needs: build-dev
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Use Node.js ${{ env.NODEJS_VERSION }}
-        uses: actions/setup-node@v4.0.2
-        with:
-          node-version: ${{ env.NODEJS_VERSION }}
-      - uses: actions/checkout@v4.1.1
-
-      - id: yarn-cache
-        name: Restore Yarn Cache
-        uses: actions/cache@v4.0.1
-        with:
-          key: ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
-          path: ./.yarn/
-          restore-keys: |
-            ${{ runner.os }}-yarn-${{ hashFiles('./yarn.lock') }}
-      - run: ./tools/ci.sh
   cplc-iroha2:
     continue-on-error: false
     needs:
@@ -1713,7 +1687,7 @@ jobs:
         with:
           node-version: ${{ env.NODEJS_VERSION }}
       - uses: actions/checkout@v4.1.1
-      
+
       - id: yarn-cache
         name: Restore Yarn Cache
         uses: actions/cache@v4.0.1
@@ -2076,7 +2050,7 @@ jobs:
         with:
           node-version: ${{ env.NODEJS_VERSION }}
       - uses: actions/checkout@v4.1.1
-      
+
       - id: yarn-cache
         name: Restore Yarn Cache
         uses: actions/cache@v4.0.1
@@ -2302,7 +2276,7 @@ jobs:
       - uses: actions/checkout@v4.1.1
       - name: ghcr.io/hyperledger/cactus-corda-all-in-one-obligation
         run: DOCKER_BUILDKIT=1 docker build ./tools/docker/corda-all-in-one/ -f ./tools/docker/corda-all-in-one/corda-v4_8/Dockerfile -t cactus-corda-all-in-one-obligation
-  
+
   ghcr-dev-container-vscode:
     runs-on: ubuntu-22.04
     needs:
@@ -2333,7 +2307,7 @@ jobs:
       - uses: actions/checkout@v4.1.1
       - name: ghcr.io/hyperledger/cactus-example-supply-chain-app
         run: DOCKER_BUILDKIT=1 docker build . -f ./examples/cactus-example-supply-chain-backend/Dockerfile -t cactus-example-supply-chain-app
-  
+
   ghcr-fabric2-all-in-one:
     runs-on: ubuntu-22.04
     steps:
@@ -2363,14 +2337,14 @@ jobs:
       - uses: actions/checkout@v4.1.1
       - name: ghcr.io/hyperledger/cactus-quorum-all-in-one
         run: DOCKER_BUILDKIT=1 docker build ./tools/docker/quorum-all-in-one/ -f ./tools/docker/quorum-all-in-one/Dockerfile
-  
+
   ghcr-quorum-multi-party-all-in-one:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4.1.1
       - name: ghcr.io/hyperledger/cactus-quorum-multi-party-all-in-one
         run: DOCKER_BUILDKIT=1 docker build ./tools/docker/quorum-multi-party-all-in-one/ -f ./tools/docker/quorum-multi-party-all-in-one/Dockerfile -t cactus-quorum-multi-party-all-in-one
-    
+
 name: Cactus_CI
 'on':
   pull_request:
