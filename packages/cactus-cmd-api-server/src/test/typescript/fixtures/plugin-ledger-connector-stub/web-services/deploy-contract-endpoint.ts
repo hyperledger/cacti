@@ -14,7 +14,10 @@ import {
   IAsyncProvider,
 } from "@hyperledger/cactus-common";
 
-import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
+import {
+  handleRestEndpointException,
+  registerWebServiceEndpoint,
+} from "@hyperledger/cactus-core";
 
 import { PluginLedgerConnectorStub } from "../plugin-ledger-connector-stub";
 
@@ -101,10 +104,8 @@ export class DeployContractEndpoint implements IWebServiceEndpoint {
       res.json(resBody);
     } catch (ex) {
       this.log.error(`Crash while serving ${reqTag}`, ex);
-      res.status(500).json({
-        message: "Internal Server Error",
-        error: ex?.stack || ex?.message,
-      });
+      const errorMsg = "Internal Server Error";
+      handleRestEndpointException({ errorMsg, log: this.log, error: ex, res });
     }
   }
 }

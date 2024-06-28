@@ -1,6 +1,9 @@
 import { Express, Request, Response } from "express";
 
-import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
+import {
+  handleRestEndpointException,
+  registerWebServiceEndpoint,
+} from "@hyperledger/cactus-core";
 
 import OAS from "../../json/openapi.json";
 
@@ -16,7 +19,6 @@ import {
   LoggerProvider,
   Checks,
   IAsyncProvider,
-  safeStringifyException,
 } from "@hyperledger/cactus-common";
 
 import { PluginLedgerConnectorEthereum } from "../plugin-ledger-connector-ethereum";
@@ -85,6 +87,7 @@ export class GetPrometheusExporterMetricsEndpointV1
 
   async handleRequest(req: Request, res: Response): Promise<void> {
     const fnTag = "GetPrometheusExporterMetrics#handleRequest()";
+    const reqTag = `${this.getVerbLowerCase()} - ${this.getPath()}`;
     const verbUpper = this.getVerbLowerCase().toUpperCase();
     this.log.debug(`${verbUpper} ${this.getPath()}`);
 
@@ -93,10 +96,22 @@ export class GetPrometheusExporterMetricsEndpointV1
         .status(200)
         .send(await this.options.connector.getPrometheusExporterMetrics());
     } catch (ex) {
-      this.log.error(`Crash while serving ${fnTag}`, ex);
-      res.status(500);
-      res.statusMessage = ex.message;
-      res.json({ error: safeStringifyException(ex) });
+      if (
+        typeof ex === "object" &&
+        ex !== null &&
+        "message" in ex &&
+        typeof ex.message === "string"
+      ) {
+        this.log.error(`Crash while serving ${reqTag} in ${fnTag}`, ex);
+        const errorMsg = ex.message;
+
+        handleRestEndpointException({
+          errorMsg,
+          log: this.log,
+          error: ex,
+          res,
+        });
+      }
     }
   }
 }

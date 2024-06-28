@@ -12,7 +12,10 @@ import {
   IExpressRequestHandler,
   IWebServiceEndpoint,
 } from "@hyperledger/cactus-core-api";
-import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
+import {
+  handleRestEndpointException,
+  registerWebServiceEndpoint,
+} from "@hyperledger/cactus-core";
 
 import { PluginLedgerConnectorStub } from "../plugin-ledger-connector-stub";
 
@@ -99,10 +102,8 @@ export class RunTransactionEndpoint implements IWebServiceEndpoint {
       res.json({ success: true, data: resBody });
     } catch (ex) {
       this.log.error(`Crash while serving ${reqTag}`, ex);
-      res.status(500).json({
-        message: "Internal Server Error",
-        error: ex?.stack || ex?.message,
-      });
+      const errorMsg = "Internal Server Error";
+      handleRestEndpointException({ errorMsg, log: this.log, error: ex, res });
     }
   }
 }

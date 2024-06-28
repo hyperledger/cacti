@@ -16,7 +16,10 @@ import {
 
 import OAS from "../../json/openapi.json";
 
-import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
+import {
+  handleRestEndpointException,
+  registerWebServiceEndpoint,
+} from "@hyperledger/cactus-core";
 
 import { PluginLedgerConnectorFabric } from "../plugin-ledger-connector-fabric";
 
@@ -93,9 +96,8 @@ export class GetPrometheusExporterMetricsEndpointV1
       res.send(resBody);
     } catch (ex) {
       this.log.error(`${fnTag} failed to serve request`, ex);
-      res.status(500);
-      res.statusMessage = ex.message;
-      res.json({ error: ex.stack });
+      const errorMsg = "Internal Server Error";
+      handleRestEndpointException({ errorMsg, log: this.log, error: ex, res });
     }
   }
 }

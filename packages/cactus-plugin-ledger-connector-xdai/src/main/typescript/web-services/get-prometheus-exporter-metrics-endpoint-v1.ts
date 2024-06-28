@@ -16,6 +16,7 @@ import {
   LoggerProvider,
   Checks,
   IAsyncProvider,
+  safeStringifyException,
 } from "@hyperledger/cactus-common";
 
 import { PluginLedgerConnectorXdai } from "../plugin-ledger-connector-xdai";
@@ -94,9 +95,9 @@ export class GetPrometheusExporterMetricsEndpointV1
       res.send(resBody);
     } catch (ex) {
       this.log.error(`${fnTag} failed to serve request`, ex);
+
       res.status(500);
-      res.statusMessage = ex.message;
-      res.json({ error: ex.stack });
+      res.json({ error: safeStringifyException(ex) });
     }
   }
 }

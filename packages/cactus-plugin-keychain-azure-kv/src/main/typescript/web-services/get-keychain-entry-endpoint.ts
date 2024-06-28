@@ -12,7 +12,10 @@ import {
   IExpressRequestHandler,
   IWebServiceEndpoint,
 } from "@hyperledger/cactus-core-api";
-import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
+import {
+  handleRestEndpointException,
+  registerWebServiceEndpoint,
+} from "@hyperledger/cactus-core";
 
 import { PluginKeychainAzureKv } from "../plugin-keychain-azure-kv";
 
@@ -95,16 +98,28 @@ export class GetKeychainEntryEndpoint implements IWebServiceEndpoint {
         value,
       });
     } catch (ex) {
-      if (ex?.message?.includes(`${key} secret not found`)) {
-        res.status(404).json({
-          key,
-          error: ex?.stack || ex?.message,
+      if (
+        typeof ex === "object" &&
+        ex !== null &&
+        "message" in ex &&
+        typeof ex.message === "string" &&
+        ex?.message?.includes(`${key} secret not found`)
+      ) {
+        const errorMsg = ex.message;
+        handleRestEndpointException({
+          errorMsg,
+          log: this.log,
+          error: ex,
+          res,
         });
       } else {
         this.log.error(`Crash while serving ${reqTag}`, ex);
-        res.status(500).json({
-          message: "Internal Server Error",
-          error: ex?.stack || ex?.message,
+        const errorMsg = `Internal server Error`;
+        handleRestEndpointException({
+          errorMsg,
+          log: this.log,
+          error: ex,
+          res,
         });
       }
     }

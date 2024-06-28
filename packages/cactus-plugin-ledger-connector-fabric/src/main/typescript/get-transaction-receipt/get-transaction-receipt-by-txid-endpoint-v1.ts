@@ -14,7 +14,10 @@ import {
   IEndpointAuthzOptions,
 } from "@hyperledger/cactus-core-api";
 
-import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
+import {
+  handleRestEndpointException,
+  registerWebServiceEndpoint,
+} from "@hyperledger/cactus-core";
 
 import { PluginLedgerConnectorFabric } from "../plugin-ledger-connector-fabric";
 import { RunTransactionRequest } from "../generated/openapi/typescript-axios";
@@ -95,9 +98,8 @@ export class GetTransactionReceiptByTxIDEndpointV1
       res.json(resBody);
     } catch (ex) {
       this.log.error(`${fnTag} failed to serve request`, ex);
-      res.status(500);
-      res.statusMessage = ex.message;
-      res.json({ error: ex.stack });
+      const errorMsg = "Internal Server Error";
+      handleRestEndpointException({ errorMsg, log: this.log, error: ex, res });
     }
   }
 }

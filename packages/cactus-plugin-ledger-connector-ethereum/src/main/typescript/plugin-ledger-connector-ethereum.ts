@@ -799,10 +799,17 @@ export class PluginLedgerConnectorEthereum
         },
       };
     } catch (ex) {
-      throw new Error(
-        `${fnTag} Failed to invoke web3.eth.personal.sendTransaction(). ` +
-          `InnerException: ${ex.stack}`,
-      );
+      if (ex instanceof Error) {
+        throw new Error(
+          `${fnTag} Failed to invoke web3.eth.personal.sendTransaction(). ` +
+            `InnerException: ${ex.stack}`,
+        );
+      } else {
+        throw new Error(
+          `${fnTag} Failed to invoke web3.eth.personal.sendTransaction(). ` +
+            `Error: ${ex}`,
+        );
+      }
     }
   }
 

@@ -1115,7 +1115,16 @@ export class PluginLedgerConnectorFabric
       }
     } catch (ex) {
       this.log.error(`Building transient map crashed: `, ex);
-      throw new Error(`Unable to build the transient map: ${ex.message}`);
+      if (
+        typeof ex === "object" &&
+        ex !== null &&
+        "message" in ex &&
+        typeof ex.message === "string"
+      ) {
+        throw new Error(`Unable to build the transient map: ${ex.message}`);
+      } else {
+        throw new Error(`Unable to build the transient map. Error: ${ex}`);
+      }
     }
 
     return transientMap;
@@ -1216,8 +1225,13 @@ export class PluginLedgerConnectorFabric
 
       return res;
     } catch (ex) {
-      this.log.error(`transact() crashed: `, ex);
-      throw new Error(`${fnTag} Unable to run transaction: ${ex.message}`);
+      this.log.error(`enrollAdmin() Failure:`, ex);
+
+      if (ex instanceof Error) {
+        throw new Error(`${fnTag} Inner Exception: ${ex?.message}`);
+      } else {
+        throw new Error(`${fnTag} Exception: ${ex}`);
+      }
     }
   }
 
@@ -1254,7 +1268,12 @@ export class PluginLedgerConnectorFabric
       return new FabricCAServices(caUrl, tlsOptions, caName);
     } catch (ex) {
       this.log.error(`createCaClient() Failure:`, ex);
-      throw new Error(`${fnTag} Inner Exception: ${ex?.message}`);
+
+      if (ex instanceof Error) {
+        throw new Error(`${fnTag} Inner Exception: ${ex?.message}`);
+      } else {
+        throw new Error(`${fnTag} Exception: ${ex}`);
+      }
     }
   }
 
@@ -1290,7 +1309,11 @@ export class PluginLedgerConnectorFabric
       return [x509Identity, wallet];
     } catch (ex) {
       this.log.error(`enrollAdmin() Failure:`, ex);
-      throw new Error(`${fnTag} Exception: ${ex?.message}`);
+      if (ex instanceof Error) {
+        throw new Error(`${fnTag} Inner Exception: ${ex?.message}`);
+      } else {
+        throw new Error(`${fnTag} Exception: ${ex}`);
+      }
     }
   }
   /**

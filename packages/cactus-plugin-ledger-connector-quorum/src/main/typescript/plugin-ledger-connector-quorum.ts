@@ -577,7 +577,7 @@ export class PluginLedgerConnectorQuorum
     } catch (ex) {
       throw new Error(
         `${fnTag} Failed to invoke web3.eth.personal.sendTransaction(). ` +
-          `InnerException: ${ex.stack}`,
+          `InnerException: ${ex}`,
       );
     }
   }

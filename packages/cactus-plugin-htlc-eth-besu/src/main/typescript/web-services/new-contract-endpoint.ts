@@ -11,7 +11,10 @@ import {
   IExpressRequestHandler,
   IWebServiceEndpoint,
 } from "@hyperledger/cactus-core-api";
-import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
+import {
+  handleRestEndpointException,
+  registerWebServiceEndpoint,
+} from "@hyperledger/cactus-core";
 import { NewContractObj } from "../generated/openapi/typescript-axios/api";
 import { PluginHtlcEthBesu } from "../plugin-htlc-eth-besu";
 import OAS from "../../json/openapi.json";
@@ -77,6 +80,7 @@ export class NewContractEndpoint implements IWebServiceEndpoint {
 
   public async handleRequest(req: Request, res: Response): Promise<void> {
     const fnTag = "NewContractEndpoint#handleRequest()";
+    const reqTag = `${this.getVerbLowerCase()} - ${this.getPath()}`;
     this.log.debug(`POST ${this.getPath()}`);
     try {
       const request: NewContractObj = req.body as NewContractObj;
@@ -91,11 +95,9 @@ export class NewContractEndpoint implements IWebServiceEndpoint {
         res.send(result);
       }
     } catch (ex) {
-      this.log.error(`${fnTag} failed to serve request`, ex);
-      res.status(500).json({
-        message: "Internal Server Error",
-        error: ex?.stack || ex?.message,
-      });
+      this.log.error(`${fnTag} request handler fn crashed for: ${reqTag}`, ex);
+      const errorMsg = "Internal server Error";
+      handleRestEndpointException({ errorMsg, log: this.log, error: ex, res });
     }
   }
 }
