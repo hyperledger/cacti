@@ -15,6 +15,7 @@ Install the following dependencies:
 
 ```shell
 go get github.com/stretchr/testify/assert
+go get golang.org/x/oauth2
 go get golang.org/x/net/context
 ```
 
@@ -91,7 +92,37 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Authorization
 
-Endpoints do not require authorization.
+
+Authentication schemes defined for the API:
+### OAuth2
+
+
+- **Type**: OAuth
+- **Flow**: accessCode
+- **Authorization URL**: https://example.com/oauth/authorize
+- **Scopes**: 
+ - **read:health**: Read health information
+ - **read:metrics**: Read metrics information
+ - **read:spec**: Read OpenAPI specification
+
+Example
+
+```golang
+auth := context.WithValue(context.Background(), sw.ContextAccessToken, "ACCESSTOKENSTRING")
+r, err := client.Service.Operation(auth, args)
+```
+
+Or via OAuth2 module to automatically refresh tokens and perform user authentication.
+
+```golang
+import "golang.org/x/oauth2"
+
+/* Perform OAuth2 round trip request and obtain a token */
+
+tokenSource := oauth2cfg.TokenSource(createContext(httpClient), &token)
+auth := context.WithValue(oauth2.NoContext, sw.ContextOAuth2, tokenSource)
+r, err := client.Service.Operation(auth, args)
+```
 
 
 ## Documentation for Utility Methods

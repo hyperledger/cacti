@@ -28,6 +28,9 @@ func (c contextKey) String() string {
 }
 
 var (
+	// ContextOAuth2 takes an oauth2.TokenSource as authentication for the request.
+	ContextOAuth2 = contextKey("token")
+
 	// ContextServerIndex uses a server configuration from the index.
 	ContextServerIndex = contextKey("serverIndex")
 

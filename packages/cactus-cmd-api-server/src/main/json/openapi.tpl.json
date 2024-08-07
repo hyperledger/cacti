@@ -76,8 +76,29 @@
         "type": "string",
         "nullable": false
       }
+    },
+    "securitySchemes": {
+      "OAuth2": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://example.com/oauth/authorize",
+            "tokenUrl": "https://example.com/oauth/token",
+            "scopes": {
+              "read:health": "Read health information",
+              "read:metrics": "Read metrics information",
+              "read:spec": "Read OpenAPI specification"
+            }
+          }
+        }
+      }
     }
   },
+  "security": [
+    {
+      "OAuth2": ["read:health", "read:metrics", "read:spec"]
+    }
+  ],
   "paths": {
     "/api/v1/api-server/healthcheck": {
       "get": {
@@ -102,7 +123,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "OAuth2": ["read:health"]
+          }
+        ]
       }
     },
     "/api/v1/api-server/get-prometheus-exporter-metrics": {
@@ -127,7 +153,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "OAuth2": ["read:metrics"]
+          }
+        ]
       }
     },
     "/api/v1/api-server/get-open-api-spec": {
@@ -152,7 +183,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "OAuth2": ["read:spec"]
+          }
+        ]
       }
     }
   }
