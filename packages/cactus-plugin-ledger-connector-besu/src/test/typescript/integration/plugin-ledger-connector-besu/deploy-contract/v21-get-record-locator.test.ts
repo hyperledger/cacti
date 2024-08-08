@@ -250,30 +250,51 @@ test(testCase, async (t: Test) => {
     });
     t2.ok(setNameOut, "setName() invocation #1 output is truthy OK");
 
-    try {
-      const setNameOutInvalid = await connector.invokeContract({
-        contractName: HelloWorldContractJson.contractName,
-        contractAbi: HelloWorldContractJson.abi,
-        contractAddress,
-        invocationType: EthContractInvocationType.Send,
-        methodName: "setName",
-        params: [newName],
-        gas: 1000000,
-        signingCredential: {
-          ethAccount: testEthAccount.address,
-          secret: testEthAccount.privateKey,
-          type: Web3SigningCredentialType.PrivateKeyHex,
-        },
-        nonce: 1,
-      });
-      t2.ifError(setNameOutInvalid);
-    } catch (error) {
-      t2.notStrictEqual(
-        error,
-        "Nonce too low",
-        "setName() invocation with invalid nonce",
-      );
-    }
+    // try {
+    //   const setNameOutInvalid = await connector.invokeContract({
+    //     contractName: HelloWorldContractJson.contractName,
+    //     contractAbi: HelloWorldContractJson.abi,
+    //     contractAddress,
+    //     invocationType: EthContractInvocationType.Send,
+    //     methodName: "setName",
+    //     params: [newName],
+    //     gas: 1000000,
+    //     signingCredential: {
+    //       ethAccount: testEthAccount.address,
+    //       secret: testEthAccount.privateKey,
+    //       type: Web3SigningCredentialType.PrivateKeyHex,
+    //     },
+    //     nonce: 1,
+    //   });
+    //   t2.ifError(setNameOutInvalid);
+    // } catch (error) {
+    //   t2.notStrictEqual(
+    //     error,
+    //     "Nonce too low",
+    //     "setName() invocation with invalid nonce",
+    //   );
+    // }
+
+    await expect(connector.invokeContract({
+      contractName: HelloWorldContractJson.contractName,
+      contractAbi: HelloWorldContractJson.abi,
+      contractAddress,
+      invocationType: EthContractInvocationType.Send,
+      methodName: "setName",
+      params: [newName],
+      gas: 1000000,
+      signingCredential: {
+        ethAccount: testEthAccount.address,
+        secret: testEthAccount.privateKey,
+        type: Web3SigningCredentialType.PrivateKeyHex,
+      },
+      nonce: 1,
+    })).rejects.toThrowError(
+      expect.objectContaining({
+        message: expect.stringContaining("Nonce too low"),
+      })
+    );
+    
     const req: InvokeContractV1Request = {
       contractName: HelloWorldContractJson.contractName,
       contractAbi: HelloWorldContractJson.abi,
