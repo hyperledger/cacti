@@ -31,6 +31,7 @@ import { addRandomSuffix } from "../test-helpers/utils";
 import "jest-extended";
 import { TransactionPayload } from "@iroha2/data-model";
 import { signIrohaV2Query } from "../../../main/typescript/iroha-sign-utils";
+import { K_CACTUS_IROHA2_TOTAL_TX_COUNT } from "../../../main/typescript/prometheus-exporter/metrics";
 
 // Logger setup
 const log: Logger = LoggerProvider.getOrCreate({
@@ -613,4 +614,27 @@ describe("Generate and send signed transaction tests", () => {
     log.info("Bob (source) balance after final transfer:", finalBobBalance);
     expect(finalBobBalance).toEqual(transferValue - transferBackValue);
   });
+
+  test("get prometheus exporter metrics", async () => {
+
+    const res = await env.apiClient.getPrometheusMetricsV1();
+    const promMetricsOutput =
+      "# HELP " +
+      K_CACTUS_IROHA2_TOTAL_TX_COUNT +
+      " Total transactions executed\n" +
+      "# TYPE " +
+      K_CACTUS_IROHA2_TOTAL_TX_COUNT +
+      " gauge\n" +
+      K_CACTUS_IROHA2_TOTAL_TX_COUNT +
+      '{type="' +
+      K_CACTUS_IROHA2_TOTAL_TX_COUNT +
+      '"} 8';
+  
+
+    expect(res).toBeTruthy();
+    expect(res.data).toBeTruthy();
+    expect(res.status).toEqual(200);
+    expect(res.data.includes(promMetricsOutput)).toBeTrue();
+  });
+
 });
