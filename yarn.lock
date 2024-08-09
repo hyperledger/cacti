@@ -10298,6 +10298,34 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hyperledger/cactus-plugin-ledger-connector-daml@workspace:packages/cactus-plugin-ledger-connector-daml":
+  version: 0.0.0-use.local
+  resolution: "@hyperledger/cactus-plugin-ledger-connector-daml@workspace:packages/cactus-plugin-ledger-connector-daml"
+  dependencies:
+    "@hyperledger/cactus-common": "npm:2.0.0-rc.3"
+    "@hyperledger/cactus-core": "npm:2.0.0-rc.3"
+    "@hyperledger/cactus-core-api": "npm:2.0.0-rc.3"
+    "@hyperledger/cactus-test-tooling": "npm:2.0.0-rc.3"
+    "@types/body-parser": "npm:1.19.4"
+    "@types/express": "npm:4.17.21"
+    "@types/multer": "npm:1.4.7"
+    "@types/temp": "npm:0.9.1"
+    "@types/uuid": "npm:10.0.0"
+    axios: "npm:1.6.0"
+    body-parser: "npm:1.20.2"
+    express: "npm:4.19.2"
+    express-openapi-validator: "npm:5.2.0"
+    internal-ip: "npm:6.2.0"
+    joi: "npm:17.13.3"
+    node-ssh: "npm:13.1.0"
+    prom-client: "npm:15.1.3"
+    rxjs: "npm:7.8.1"
+    temp: "npm:0.9.4"
+    typescript-optional: "npm:2.0.1"
+    uuid: "npm:10.0.0"
+  languageName: unknown
+  linkType: soft
+
 "@hyperledger/cactus-plugin-ledger-connector-ethereum@npm:2.0.0-rc.3, @hyperledger/cactus-plugin-ledger-connector-ethereum@workspace:packages/cactus-plugin-ledger-connector-ethereum":
   version: 0.0.0-use.local
   resolution: "@hyperledger/cactus-plugin-ledger-connector-ethereum@workspace:packages/cactus-plugin-ledger-connector-ethereum"
