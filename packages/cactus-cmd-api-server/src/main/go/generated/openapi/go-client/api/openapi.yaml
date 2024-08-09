@@ -8,6 +8,11 @@ info:
   version: 2.0.0-rc.3
 servers:
 - url: /
+security:
+- OAuth2:
+  - read:health
+  - read:metrics
+  - read:spec
 paths:
   /api/v1/api-server/healthcheck:
     get:
@@ -21,6 +26,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthCheckResponse'
           description: OK
+      security:
+      - OAuth2:
+        - read:health
       summary: Can be used to verify liveness of an API server instance
       x-hyperledger-cacti:
         http:
@@ -37,6 +45,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PrometheusExporterMetricsResponse'
           description: OK
+      security:
+      - OAuth2:
+        - read:metrics
       summary: Get the Prometheus Metrics
       x-hyperledger-cacti:
         http:
@@ -54,6 +65,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/GetOpenApiSpecV1EndpointResponse'
           description: OK
+      security:
+      - OAuth2:
+        - read:spec
       x-hyperledger-cacti:
         http:
           verbLowerCase: get
@@ -127,3 +141,14 @@ components:
     GetOpenApiSpecV1EndpointResponse:
       nullable: false
       type: string
+  securitySchemes:
+    OAuth2:
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          scopes:
+            read:health: Read health information
+            read:metrics: Read metrics information
+            read:spec: Read OpenAPI specification
+          tokenUrl: https://example.com/oauth/token
+      type: oauth2

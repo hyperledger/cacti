@@ -60,5 +60,16 @@ Class | Method | HTTP request | Description
 <a id="documentation-for-authorization"></a>
 ## Documentation for Authorization
 
-Endpoints do not require authorization.
+
+Authentication schemes defined for the API:
+<a id="OAuth2"></a>
+### OAuth2
+
+- **Type**: OAuth
+- **Flow**: accessCode
+- **Authorization URL**: https://example.com/oauth/authorize
+- **Scopes**: 
+  - read:health: Read health information
+  - read:metrics: Read metrics information
+  - read:spec: Read OpenAPI specification
 
