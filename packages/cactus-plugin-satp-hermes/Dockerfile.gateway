@@ -1,0 +1,71 @@
+FROM ubuntu:22.04
+
+USER root
+RUN groupadd -r docker
+RUN usermod -aG docker root
+
+RUN apt-get update
+RUN apt-get -y install --no-install-recommends supervisor
+RUN apt-get -y install --no-install-recommends openssl
+RUN apt-get -y install --no-install-recommends jq
+RUN apt-get -y install --no-install-recommends curl
+RUN apt-get -y install --no-install-recommends file
+RUN apt-get -y install --no-install-recommends ca-certificates
+RUN apt-get -y install --no-install-recommends tzdata
+RUN apt-get -y install --no-install-recommends git
+RUN apt-get -y install --no-install-recommends apt-utils
+RUN apt-get -y install --no-install-recommends net-tools
+RUN apt-get -y install --no-install-recommends default-jdk
+
+RUN mkdir -p /var/log/supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+ARG APP=/usr/src/app/cactus/
+COPY . ${APP}
+
+RUN mkdir -p ${APP}
+RUN mkdir -p "${APP}/log/"
+RUN mkdir -p /app/keys
+
+WORKDIR ${APP}
+
+SHELL ["/bin/bash", "--login", "-i", "-c"]
+# Installing Node Version Manager (nvm)
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+
+RUN source ~/.bashrc && \
+    nvm install 18.18.2 && \
+    npm install -g yarn ts-node
+
+SHELL ["/bin/bash", "--login", "-c"]
+
+COPY ./supervisord.conf /etc/supervisord.conf
+COPY ./run-satp-gateway.sh /
+COPY ./tsconfig.json /usr/src/tsconfig.json
+COPY ./tsconfig.json /tsconfig.json
+
+RUN chmod +x /run-satp-gateway.sh
+
+EXPOSE 3010 3011 4010
+
+EXPOSE 9001
+
+ENV SATP_PRIVATE_KEY="default_private_key"
+ENV SATP_PUBLIC_KEY="default_public_key"
+
+ENV SATP_LOG_LEVEL=INFO
+ENV SATP_NODE_ENV=development
+ENV SATP_ENABLE_OPEN_API=true
+
+ENV SATP_GATEWAY_VERSION_CORE=v02
+ENV SATP_GATEWAY_VERSION_ARCHITECTURE=v02
+ENV SATP_GATEWAY_VERSION_CRASH=v02
+ENV SATP_GATEWAY_SERVER_PORT=3010
+ENV SATP_GATEWAY_CLIENT_PORT=3011
+ENV SATP_GATEWAY_GRPC_PORT=4010
+ENV SATP_VALIDATION_OPTIONS={"skipMissingProperties":true}
+ENV SATP_PRIVACY_POLICIES=[{"policy":"singleTransaction","policyHash":"hash123"}]
+ENV SATP_MERGE_POLICIES=[{"policy":"NONE","policyHash":"hash456"}]
+
+ENTRYPOINT ["/usr/bin/supervisord"]
+CMD ["--configuration", "/etc/supervisord.conf", "--nodaemon"]

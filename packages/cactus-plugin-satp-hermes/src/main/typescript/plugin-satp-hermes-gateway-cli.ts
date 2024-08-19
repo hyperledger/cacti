@@ -2,44 +2,45 @@
 
 import { LoggerProvider, LogLevelDesc } from "@hyperledger/cactus-common";
 import { SATPGateway, SATPGatewayConfig } from "./plugin-satp-hermes-gateway";
-import { SupportedChain, DraftVersions, CurrentDrafts } from "./core/types";
+import { SupportedChain } from "./core/types";
+import { SATP_VERSION } from "./core/constants";
+import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
+import path from "path";
 
 export async function launchGateway(env?: NodeJS.ProcessEnv): Promise<void> {
-  dotenv.config();
+  dotenv.config({ path: path.resolve(__dirname, "../../../.env.example") });
 
   const logLevel: LogLevelDesc =
-    (env?.SATP_LOG_LEVEL as LogLevelDesc) || "INFO";
+    (env?.SATP_LOG_LEVEL?.toUpperCase() as LogLevelDesc) || "INFO";
   const logger = LoggerProvider.getOrCreate({
     level: logLevel,
     label: "SATP-Gateway",
   });
 
-  // Parse the version string into DraftVersions object
-  const parseVersion = (versionString: string): DraftVersions => {
-    const [Core, Architecture, Crash] = versionString.split(",");
-    return {
-      [CurrentDrafts.Core]: Core,
-      [CurrentDrafts.Architecture]: Architecture,
-      [CurrentDrafts.Crash]: Crash,
-    };
+  const parseSupportedDLTs = (): SupportedChain[] => {
+    return env
+      ?.SATP_SUPPORTED_DLTS!.split(",")
+      .filter((dlt) =>
+        Object.values(SupportedChain).includes(dlt as SupportedChain),
+      ) as SupportedChain[];
   };
 
   const gatewayConfig: SATPGatewayConfig = {
     gid: {
-      id: env?.SATP_GATEWAY_ID || "",
+      id: env?.SATP_GATEWAY_ID || uuidv4(),
       name: env?.SATP_GATEWAY_NAME,
-      version: env?.SATP_GATEWAY_VERSION
-        ? [parseVersion(env.SATP_GATEWAY_VERSION)]
-        : [],
-      supportedDLTs:
-        env?.SATP_SUPPORTED_DLTS?.split(",").map(
-          (dlt) => dlt as SupportedChain,
-        ) || [],
+      version: [
+        {
+          Core: env?.SATP_GATEWAY_VERSION_CORE || SATP_VERSION,
+          Architecture: env?.SATP_GATEWAY_VERSION_ARCHITECTURE || SATP_VERSION,
+          Crash: env?.SATP_GATEWAY_VERSION_CRASH || SATP_VERSION,
+        },
+      ],
+      supportedDLTs: env?.SATP_SUPPORTED_DLTS ? parseSupportedDLTs() : [],
       proofID: env?.SATP_PROOF_ID,
       gatewayServerPort: parseInt(env?.SATP_GATEWAY_SERVER_PORT || "0", 10),
       gatewayClientPort: parseInt(env?.SATP_GATEWAY_CLIENT_PORT || "0", 10),
-      gatewayGrpcPort: parseInt(env?.SATP_GATEWAY_GRPC_PORT || "0", 10),
       address: env?.SATP_GATEWAY_ADDRESS as
         | `http://${string}`
         | `https://${string}`
