@@ -6,6 +6,7 @@ import {
   ILoggerOptions,
   JsObjectSigner,
   IJsObjectSignerOptions,
+  LogLevelDesc,
 } from "@hyperledger/cactus-common";
 import { v4 as uuidv4 } from "uuid";
 
@@ -15,6 +16,7 @@ import {
   IsObject,
   IsString,
   Contains,
+  ValidatorOptions,
 } from "class-validator";
 
 import path from "path";
@@ -24,6 +26,8 @@ import {
   GatewayIdentity,
   ShutdownHook,
   SupportedChain,
+  Address,
+  DraftVersions,
 } from "./core/types";
 import {
   GatewayOrchestrator,
@@ -35,6 +39,7 @@ import http from "http";
 import {
   DEFAULT_PORT_GATEWAY_CLIENT,
   DEFAULT_PORT_GATEWAY_SERVER,
+  SATP_VERSION,
 } from "./core/constants";
 import { bufArray2HexStr } from "./gateway-utils";
 import {
@@ -53,6 +58,16 @@ import {
   ISATPBridgesOptions,
   SATPBridgesManager,
 } from "./gol/satp-bridges-manager";
+
+import dotenv from "dotenv";
+import { IPrivacyPolicyValue } from "@hyperledger/cactus-plugin-bungee-hermes/dist/lib/main/typescript/view-creation/privacy-policies";
+import {
+  MergePolicyOpts,
+  PrivacyPolicyOpts,
+} from "@hyperledger/cactus-plugin-bungee-hermes/dist/lib/main/typescript/generated/openapi/typescript-axios";
+import { IMergePolicyValue } from "@hyperledger/cactus-plugin-bungee-hermes/dist/lib/main/typescript/view-merging/merge-policies";
+import { ISignerKeyPairs } from "@hyperledger/cactus-common/src/main/typescript/signer-key-pairs";
+dotenv.config({ path: path.resolve(__dirname, "../../../.env.example") });
 
 export class SATPGateway implements IPluginWebService, ICactusPlugin {
   // todo more checks; example port from config is between 3000 and 9000
@@ -249,92 +264,357 @@ export class SATPGateway implements IPluginWebService, ICactusPlugin {
   }
 
   /* Gateway configuration helpers */
+
+  private static processGatewayId(): string {
+    return process.env.SATP_GATEWAY_ID || uuidv4();
+  }
+
+  private static processGatewayName(): string {
+    return process.env.SATP_GATEWAY_NAME || uuidv4();
+  }
+
+  private static processGatewayVersion(): DraftVersions[] {
+    return [
+      {
+        Core: process.env.SATP_GATEWAY_VERSION_CORE || SATP_VERSION,
+        Architecture:
+          process.env.SATP_GATEWAY_VERSION_ARCHITECTURE || SATP_VERSION,
+        Crash: process.env.SATP_GATEWAY_VERSION_CRASH || SATP_VERSION,
+      },
+    ];
+  }
+
+  private static processGatewaySupportedDLTs(): SupportedChain[] {
+    if (process.env.SATP_SUPPORTED_DLTS) {
+      const dlts = process.env.SATP_SUPPORTED_DLTS.split(",").filter((dlt) =>
+        Object.values(SupportedChain).includes(dlt as SupportedChain),
+      ) as SupportedChain[];
+      if (dlts.length > 0) {
+        return dlts;
+      }
+      console.warn(
+        "SATP_SUPPORTED_DLTS is empty or contains no valid DLTs. Using default values.",
+      );
+    }
+    return [];
+  }
+
+  private static processGatewayProofID(): string {
+    return process.env.SATP_PROOF_ID || uuidv4();
+  }
+
+  private static processGatewayServerPort(): number {
+    const port = Number(process.env.SATP_GATEWAY_SERVER_PORT);
+    if (process.env.SATP_GATEWAY_SERVER_PORT && !isNaN(Number(port))) {
+      return parseInt(process.env.SATP_GATEWAY_SERVER_PORT);
+    }
+    return DEFAULT_PORT_GATEWAY_SERVER;
+  }
+
+  private static processGatewayClientPort(): number {
+    const port = Number(process.env.SATP_GATEWAY_CLIENT_PORT);
+    if (process.env.SATP_GATEWAY_CLIENT_PORT && !isNaN(Number(port))) {
+      return parseInt(process.env.SATP_GATEWAY_CLIENT_PORT);
+    }
+    return DEFAULT_PORT_GATEWAY_CLIENT;
+  }
+
+  private static processGatewayAddress(): Address {
+    return (
+      (process.env.SATP_GATEWAY_ADDRESS as Address) ||
+      `http://localhost:${DEFAULT_PORT_GATEWAY_CLIENT}`
+    );
+  }
+
+  private static processGatewayIdentity(
+    pluginOptions: SATPGatewayConfig,
+  ): GatewayIdentity {
+    if (!pluginOptions.gid) {
+      return {
+        id: this.processGatewayId(),
+        pubKey: bufArray2HexStr(pluginOptions.keyPair!.publicKey),
+        name: this.processGatewayName(),
+        version: this.processGatewayVersion(),
+        supportedDLTs: this.processGatewaySupportedDLTs(),
+        proofID: this.processGatewayProofID(),
+        gatewayServerPort: this.processGatewayServerPort(),
+        gatewayClientPort: this.processGatewayClientPort(),
+        address: this.processGatewayAddress(),
+      };
+    } else {
+      const gid = pluginOptions.gid;
+      return {
+        id: gid.id, // || this.processGatewayId(),
+        pubKey: bufArray2HexStr(pluginOptions.keyPair!.publicKey),
+        name: gid.name || this.processGatewayName(),
+        version: gid.version, // || this.processGatewayVersion(),
+        supportedDLTs: gid.supportedDLTs,
+        // gid.supportedDLTs && gid.supportedDLTs.length > 0
+        // ? gid.supportedDLTs
+        // : this.processGatewaySupportedDLTs(),
+        proofID: gid.proofID || this.processGatewayProofID(),
+        gatewayServerPort:
+          gid.gatewayServerPort && gid.gatewayServerPort !== 0
+            ? gid.gatewayServerPort
+            : this.processGatewayServerPort(),
+        gatewayClientPort:
+          gid.gatewayClientPort && gid.gatewayClientPort !== 0
+            ? gid.gatewayClientPort
+            : this.processGatewayClientPort(),
+        address: gid.address || this.processGatewayAddress(),
+      };
+    }
+  }
+
+  private static processCounterPartyGateways(): GatewayIdentity[] {
+    if (process.env.SATP_COUNTER_PARTY_GATEWAYS) {
+      try {
+        const parsedGateways = JSON.parse(
+          process.env.SATP_COUNTER_PARTY_GATEWAYS,
+        ) as GatewayIdentity[];
+
+        const validGateway = (gateway: unknown): gateway is GatewayIdentity => {
+          if (!gateway) {
+            return false;
+          }
+          const gw = gateway as Record<string, unknown>;
+          if (
+            !("id" in gw) ||
+            !("version" in gw) ||
+            !("supportedDLTs" in gw) ||
+            typeof gw.id !== "string" ||
+            typeof gw.version !== "string" ||
+            typeof gw.supportedDLTs !== "string"
+          ) {
+            return false;
+          }
+          const [Core, Architecture, Crash] = gw.version.split(",");
+          if (!Core || !Architecture || !Crash) {
+            return false;
+          }
+          const dlts = gw.supportedDLTs.split(",") as SupportedChain[];
+          if (
+            !dlts.every((dlt) => Object.values(SupportedChain).includes(dlt)) ||
+            dlts.length === 0
+          ) {
+            return false;
+          }
+          // validate optional fields if provided
+          if (
+            ("name" in gw && typeof gw.name !== "string") ||
+            ("proofID" in gw && typeof gw.proofID !== "string") ||
+            ("gatewayServerPort" in gw &&
+              (typeof gw.gatewayServerPort !== "string" ||
+                isNaN(Number(gw.gatewayServerPort)))) ||
+            ("gatewayClientPort" in gw &&
+              (typeof gw.gatewayClientPort !== "string" ||
+                isNaN(Number(gw.gatewayClientPort)))) ||
+            ("address" in gw && typeof gw.address !== "string")
+          ) {
+            return false;
+          }
+          return true;
+        };
+
+        if (
+          !Array.isArray(parsedGateways) ||
+          !parsedGateways.every(validGateway)
+        ) {
+          throw new Error(
+            "SATP_COUNTER_PARTY_GATEWAYS must be an array of valid gateway identities",
+          );
+        } else {
+          return parsedGateways;
+        }
+      } catch (error) {
+        console.warn(
+          `Failed to parse SATP_COUNTER_PARTY_GATEWAYS: ${error.message}. Using default.`,
+        );
+      }
+    }
+    return [];
+  }
+
+  private static processLogLevel(): LogLevelDesc {
+    return (
+      (process.env.SATP_LOG_LEVEL?.toUpperCase() as LogLevelDesc) || "DEBUG"
+    );
+  }
+
+  private static processKeyPair(): ISignerKeyPairs {
+    if (process.env.SATP_PUBLIC_KEY && process.env.SATP_PRIVATE_KEY) {
+      return {
+        publicKey: Buffer.from(process.env.SATP_PUBLIC_KEY, "hex"),
+        privateKey: Buffer.from(process.env.SATP_PRIVATE_KEY, "hex"),
+      };
+    }
+    return Secp256k1Keys.generateKeyPairsBuffer();
+  }
+
+  private static processEnvironment(): "development" | "production" {
+    return (
+      (process.env.SATP_NODE_ENV as "development" | "production") ||
+      "development"
+    );
+  }
+
+  private static processEnableOpenAPI(): boolean {
+    if (process.env.SATP_ENABLE_OPEN_API === "false") {
+      return false;
+    }
+    return true;
+  }
+
+  private static processValidationOptions(): ValidatorOptions {
+    if (process.env.SATP_VALIDATION_OPTIONS) {
+      try {
+        const envValidationOptions = JSON.parse(
+          process.env.SATP_VALIDATION_OPTIONS,
+        ) as ValidatorOptions;
+
+        if (
+          typeof envValidationOptions.skipMissingProperties !== "boolean" &&
+          envValidationOptions.skipMissingProperties !== undefined
+        ) {
+          throw new Error(
+            "skipMissingProperties must be a boolean if provided",
+          );
+        } else {
+          return envValidationOptions;
+        }
+      } catch (error) {
+        console.warn(
+          `Failed to parse SATP_VALIDATION_OPTIONS: ${error}. Using default.`,
+        );
+      }
+    }
+    return {};
+  }
+
+  private static processPrivacyPolicies(): IPrivacyPolicyValue[] {
+    if (process.env.SATP_PRIVACY_POLICIES) {
+      try {
+        const parsedPolicies = JSON.parse(
+          process.env.SATP_PRIVACY_POLICIES,
+        ) as IPrivacyPolicyValue[];
+
+        const validPolicies = (
+          eachPolicy: unknown,
+        ): eachPolicy is IPrivacyPolicyValue => {
+          if (!eachPolicy) {
+            return false;
+          }
+          const policy = eachPolicy as Record<string, unknown>;
+          return (
+            "policy" in policy &&
+            "policyHash" in policy &&
+            typeof policy.policy === "string" &&
+            typeof policy.policyHash === "string" &&
+            (policy.policy === PrivacyPolicyOpts.PruneState ||
+              policy.policy === PrivacyPolicyOpts.SingleTransaction)
+          );
+        };
+
+        if (
+          !Array.isArray(parsedPolicies) ||
+          !parsedPolicies.every(validPolicies)
+        ) {
+          throw new Error(
+            "SATP_PRIVACY_POLICIES must be an array of valid privacy policies",
+          );
+        } else {
+          return parsedPolicies;
+        }
+      } catch (error) {
+        console.warn(
+          `Failed to parse SATP_PRIVACY_POLICIES: ${error.message}. Using default.`,
+        );
+      }
+    }
+    return [];
+  }
+
+  private static processMergePolicies(): IMergePolicyValue[] {
+    if (process.env.SATP_MERGE_POLICIES) {
+      try {
+        const parsedPolicies = JSON.parse(
+          process.env.SATP_MERGE_POLICIES,
+        ) as IMergePolicyValue[];
+
+        const validPolicies = (
+          eachPolicy: unknown,
+        ): eachPolicy is IMergePolicyValue => {
+          if (!eachPolicy) {
+            return false;
+          }
+          const policy = eachPolicy as Record<string, unknown>;
+          return (
+            "policy" in policy &&
+            "policyHash" in policy &&
+            typeof policy.policy === "string" &&
+            typeof policy.policyHash === "string" &&
+            (policy.policy === MergePolicyOpts.PruneState ||
+              policy.policy === MergePolicyOpts.PruneStateFromView ||
+              policy.policy === MergePolicyOpts.NONE)
+          );
+        };
+
+        if (
+          !Array.isArray(parsedPolicies) ||
+          !parsedPolicies.every(validPolicies)
+        ) {
+          throw new Error(
+            "SATP_MERGE_POLICIES must be an array of valid merge policies if provided",
+          );
+        } else {
+          return parsedPolicies;
+        }
+      } catch (error) {
+        console.warn(
+          `Failed to parse SATP_MERGE_POLICIES: ${error.message}. Using default.`,
+        );
+      }
+    }
+    return [];
+  }
+
   static ProcessGatewayCoordinatorConfig(
     pluginOptions: SATPGatewayConfig,
   ): SATPGatewayConfig {
     if (!pluginOptions.keyPair) {
-      pluginOptions.keyPair = Secp256k1Keys.generateKeyPairsBuffer();
+      pluginOptions.keyPair = this.processKeyPair();
     }
 
-    const id = uuidv4();
-    if (!pluginOptions.gid) {
-      pluginOptions.gid = {
-        id: id,
-        pubKey: bufArray2HexStr(pluginOptions.keyPair.publicKey),
-        name: id,
-        version: [
-          {
-            Core: "v02",
-            Architecture: "v02",
-            Crash: "v02",
-          },
-        ],
-        supportedDLTs: [SupportedChain.FABRIC, SupportedChain.BESU],
-        proofID: "mockProofID1",
-        gatewayServerPort: DEFAULT_PORT_GATEWAY_SERVER,
-        gatewayClientPort: DEFAULT_PORT_GATEWAY_CLIENT,
-        address: "http://localhost",
-      };
-    } else {
-      if (!pluginOptions.gid.id) {
-        pluginOptions.gid.id = id;
-      }
+    pluginOptions.gid = this.processGatewayIdentity(pluginOptions);
 
-      if (!pluginOptions.gid.name) {
-        pluginOptions.gid.name = id;
-      }
-
-      if (!pluginOptions.gid.pubKey) {
-        pluginOptions.gid.pubKey = bufArray2HexStr(
-          pluginOptions.keyPair.publicKey,
-        );
-      }
-
-      if (!pluginOptions.gid.version) {
-        pluginOptions.gid.version = [
-          {
-            Core: "v02",
-            Architecture: "v02",
-            Crash: "v02",
-          },
-        ];
-      }
-
-      if (!pluginOptions.gid.supportedDLTs) {
-        pluginOptions.gid.supportedDLTs = [
-          SupportedChain.FABRIC,
-          SupportedChain.BESU,
-        ];
-      }
-
-      if (!pluginOptions.gid.proofID) {
-        pluginOptions.gid.proofID = "mockProofID1";
-      }
-
-      if (!pluginOptions.gid.gatewayServerPort) {
-        pluginOptions.gid.gatewayServerPort = DEFAULT_PORT_GATEWAY_SERVER;
-      }
-
-      if (!pluginOptions.gid.gatewayClientPort) {
-        pluginOptions.gid.gatewayClientPort = DEFAULT_PORT_GATEWAY_CLIENT;
-      }
-
-      if (!pluginOptions.logLevel) {
-        pluginOptions.logLevel = "DEBUG";
-      }
-
-      if (!pluginOptions.environment) {
-        pluginOptions.environment = "development";
-      }
-
-      if (!pluginOptions.enableOpenAPI) {
-        pluginOptions.enableOpenAPI = true;
-      }
-
-      if (!pluginOptions.validationOptions) {
-        // do nothing
-      }
+    if (!pluginOptions.counterPartyGateways) {
+      pluginOptions.counterPartyGateways = this.processCounterPartyGateways();
     }
+
+    if (!pluginOptions.logLevel) {
+      pluginOptions.logLevel = this.processLogLevel();
+    }
+
+    if (!pluginOptions.environment) {
+      pluginOptions.environment = this.processEnvironment();
+    }
+
+    if (!pluginOptions.enableOpenAPI) {
+      pluginOptions.enableOpenAPI = this.processEnableOpenAPI();
+    }
+
+    if (!pluginOptions.validationOptions) {
+      pluginOptions.validationOptions = this.processValidationOptions();
+    }
+
+    if (!pluginOptions.privacyPolicies) {
+      pluginOptions.privacyPolicies = this.processPrivacyPolicies();
+    }
+
+    if (!pluginOptions.mergePolicies) {
+      pluginOptions.mergePolicies = this.processMergePolicies();
+    }
+
     return pluginOptions;
   }
 

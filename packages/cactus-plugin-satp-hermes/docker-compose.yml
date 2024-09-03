@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  ### To build new image version:
+  ### uncomment and run in the terminal "docker compose build"
+  # satp-hermes-gateway-base:
+  #   image: ghcr.io/brunoffmateus/cactus-plugin-satp-hermes-gateway:new-version
+  #   build:
+  #     context: ./
+  #     dockerfile: Dockerfile.gateway
+
+  satp-hermes-gateway1:
+    image: ghcr.io/brunoffmateus/cactus-plugin-satp-hermes-gateway:2024-09-02-3117
+    ports:
+      - 13010:3010/tcp # SERVER_PORT
+      - 13011:3011/tcp # CLIENT_PORT
+    environment:
+      - SATP_GATEWAY_ID=gateway1
+      - SATP_GATEWAY_NAME=ExampleGateway1
+      - SATP_SUPPORTED_DLTS=FabricSATPGateway,BesuSATPGateway
+      - SATP_GATEWAY_ADDRESS=http://localhost
+      - SATP_PROOF_ID=mockProofID1
+      - SATP_COUNTER_PARTY_GATEWAYS=[{"id":"gateway2","version":"v02,v02,v02","supportedDLTs":"FabricSATPGateway,BesuSATPGateway"}]
+    volumes:
+      - gateway1_keys:/app/keys
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '0.9'
+
+  # satp-hermes-gateway2:
+  #   image: ghcr.io/brunoffmateus/cactus-plugin-satp-hermes-gateway:2024-09-02-3117
+  #   ports:
+  #     - 23020:3010/tcp # SERVER_PORT
+  #     - 23021:3011/tcp # CLIENT_PORT
+  #   environment:
+  #     - SATP_GATEWAY_ID=gateway2
+  #     - SATP_GATEWAY_NAME=ExampleGateway2
+  #     - SATP_SUPPORTED_DLTS=FabricSATPGateway,BesuSATPGateway
+  #     - SATP_GATEWAY_ADDRESS=http://localhost
+  #     - SATP_PROOF_ID=mockProofID2
+  #     - SATP_COUNTER_PARTY_GATEWAYS=[{"id":"gateway1","version":"v02,v02,v02","supportedDLTs":"FabricSATPGateway,BesuSATPGateway"}]
+  #   volumes:
+  #     - gateway2_keys:/app/keys
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 2G
+  #         cpus: '0.5'
+
+volumes:
+  gateway1_keys:
+  # gateway2_keys:
