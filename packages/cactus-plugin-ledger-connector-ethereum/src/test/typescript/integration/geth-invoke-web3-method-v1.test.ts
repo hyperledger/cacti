@@ -167,43 +167,37 @@ describe("invokeRawWeb3EthMethod Tests", () => {
   });
 
   test("invokeRawWeb3EthMethod with missing arg throws error (getBlock)", async () => {
-    try {
-      const connectorResponse = connector.invokeRawWeb3EthMethod({
-        methodName: "getBlock",
-      });
-
-      await connectorResponse;
-      fail("Calling getBlock with missing argument should throw an error");
-    } catch (err) {
-      expect(err).toBeTruthy();
-    }
+    // Should "missing arg" mean no method name is provided? Because the only required parameter is methodName
+    // Have taken out methodName from the invocation of the method as I'm guessing that is what this test if supposed to check for?
+    // It will also fail if methodName is an empty string. 
+    // Or should we just delete this test ?
+    await expect(
+      // @ts-expect-error: the script fails otherwise
+      connector.invokeRawWeb3EthMethod(),
+    ).rejects.toBeTruthy();
   });
 
   test("invokeRawWeb3EthMethod with invalid arg throws error (getBlock)", async () => {
-    try {
-      const connectorResponse = connector.invokeRawWeb3EthMethod({
+    await expect(
+      connector.invokeRawWeb3EthMethod({
         methodName: "getBlock",
         params: ["foo"],
-      });
+      }),
+    ).rejects.toThrow();
 
-      await connectorResponse;
-      fail("Calling getBlock with argument should throw an error");
-    } catch (err) {
-      expect(err).toBeTruthy();
-    }
+    log.info(
+      "Calling getBlock with an invalid argument threw an error as expected",
+    );
   });
 
   test("invokeRawWeb3EthMethod with non existing method throws error", async () => {
-    try {
-      const connectorResponse = connector.invokeRawWeb3EthMethod({
+    await expect(
+      connector.invokeRawWeb3EthMethod({
         methodName: "foo",
         params: ["foo"],
-      });
+      }),
+    ).rejects.toThrow();
 
-      await connectorResponse;
-      fail("Calling non existing method should throw an error");
-    } catch (err) {
-      expect(err).toBeTruthy();
-    }
+    log.info("Calling non-existing method threw an error as expected");
   });
 });
